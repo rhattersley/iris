@@ -233,6 +233,10 @@ setup(
             ]
         )
     },
+    ext_modules=[
+        setuptools.Extension('iris.dt360', ['src/iris/dt360/dt360module.c'],
+                             include_dirs=[np.get_include()])
+    ],
     cmdclass={'test': TestRunner, 'build_py': BuildPyWithExtras, 
               'std_names': MakeStdNames, 'pyke_rules': MakePykeRules},
 )
