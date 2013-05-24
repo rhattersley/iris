@@ -18,6 +18,9 @@ typedef struct { char c; dt360 r; } align_test;
 
 static PyObject *foo_type;
 
+// Should this be a static global?
+static PyArray_Descr *dt360_descr;
+
 static PyObject *dt360_getitem(void *data, void *arr)
 {
     // TODO: Consider "misaligned and/or swapped" arrays
@@ -82,9 +85,41 @@ static npy_bool dt360_nonzero(dt360 *data, void *arr)
     return 1;
 }
 
+///////////////////////////////////////////////////////////
+//
+// Module functions
+//
+
+static PyObject *
+dt360_calendar_dtype(PyObject *module, PyObject *args, PyObject *kw)
+{
+    PyObject *month_lengths;
+    int leap_year = 0;
+    int leap_month = 0;     // This gives us no leap years by default.
+    PyObject *metadata;
+    PyArray_Descr *new_dtype;
+
+    static char *kwlist[] = {"month_lengths", "leap_year", "leap_month", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kw, "O|ii", kwlist,
+                                     &month_lengths, &leap_year, &leap_month))
+        return NULL;
+
+    metadata = Py_BuildValue("(Oii)", month_lengths, leap_year, leap_month);
+    new_dtype = PyArray_DescrNewFromType(dt360_descr->type_num);
+    new_dtype->metadata = metadata;
+    return (PyObject *)new_dtype;
+}
+
 static PyMethodDef module_methods[] = {
+    {"calendar_dtype", (PyCFunction)dt360_calendar_dtype, METH_VARARGS | METH_KEYWORDS, "Return dtype appropriate for given calendar definition."},
     {NULL, NULL}
 };
+
+///////////////////////////////////////////////////////////
+//
+// Module initialisation
+//
 
 PyMODINIT_FUNC initdt360(void)
 {
@@ -94,9 +129,6 @@ PyMODINIT_FUNC initdt360(void)
                        "TODO ...");
     if (m == NULL)
         return;
-
-    // Should this be a static global?
-    PyArray_Descr *dt360_descr;
 
     // TODO: How to handle error during this initialisation function?
 
