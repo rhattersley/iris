@@ -1248,8 +1248,8 @@ class DimCoord(Coord):
         # Checks for 1d, numeric, monotonic
         if points.ndim != 1:
             raise ValueError('The points array must be 1-dimensional.')
-        if not np.issubdtype(points.dtype, np.number):
-            raise ValueError('The points array must be numeric.')
+        #if not np.issubdtype(points.dtype, np.number):
+        #    raise ValueError('The points array must be numeric.')
         if len(points) > 1 and not iris.util.monotonic(points, strict=True):
             raise ValueError('The points array must be strictly monotonic.')
         # Make the array read-only.
@@ -1278,8 +1278,8 @@ class DimCoord(Coord):
                 raise ValueError("Bounds shape must be compatible with points "
                                  "shape.")
             # Checks for numeric and monotonic
-            if not np.issubdtype(bounds.dtype, np.number):
-                raise ValueError('The bounds array must be numeric.')
+            #if not np.issubdtype(bounds.dtype, np.number):
+            #    raise ValueError('The bounds array must be numeric.')
 
             n_bounds = bounds.shape[-1]
             n_points = bounds.shape[0]

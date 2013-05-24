@@ -35,6 +35,7 @@ import netcdftime
 import iris.config
 import iris.fileformats.rules
 import iris.io
+import iris.time
 import iris.unit
 import iris.fileformats.manager
 import iris.coord_systems
@@ -892,6 +893,10 @@ class PPField(object):
         self._data = value
         self._data_manager = None
 
+    def _time_class(self):
+        # TODO: Handle the other calendars (i.e. not 360-day)
+        return {2: iris.time.Time360}.get(self.lbtim.ic, netcdftime.datetime)
+
     @property
     def calendar(self):
         """Return the calendar of the field."""
@@ -1228,7 +1233,8 @@ class PPField2(PPField):
 
     def _get_t1(self):
         if not hasattr(self, '_t1'):
-            self._t1 = netcdftime.datetime(self.lbyr, self.lbmon, self.lbdat, self.lbhr, self.lbmin)
+            time_class = self._time_class()
+            self._t1 = time_class(self.lbyr, self.lbmon, self.lbdat, self.lbhr, self.lbmin)
         return self._t1
     
     def _set_t1(self, dt):
@@ -1246,7 +1252,8 @@ class PPField2(PPField):
 
     def _get_t2(self):
         if not hasattr(self, '_t2'):
-            self._t2 = netcdftime.datetime(self.lbyrd, self.lbmond, self.lbdatd, self.lbhrd, self.lbmind)
+            time_class = self._time_class()
+            self._t2 = time_class(self.lbyrd, self.lbmond, self.lbdatd, self.lbhrd, self.lbmind)
         return self._t2
 
     def _set_t2(self, dt):
@@ -1262,6 +1269,7 @@ class PPField2(PPField):
     t2 = property(_get_t2, _set_t2, None,
         "A netcdftime.datetime object consisting of the lbyrd, lbmond, lbdatd, lbhrd, and lbmind attributes.")
 
+
 class PPField3(PPField):
     """
     A class to hold a single field from a PP file, with a header release number of 3.
@@ -1273,7 +1281,8 @@ class PPField3(PPField):
 
     def _get_t1(self):
         if not hasattr(self, '_t1'):
-            self._t1 = netcdftime.datetime(self.lbyr, self.lbmon, self.lbdat, self.lbhr, self.lbmin, self.lbsec)
+            time_class = self._time_class()
+            self._t1 = time_class(self.lbyr, self.lbmon, self.lbdat, self.lbhr, self.lbmin, self.lbsec)
         return self._t1
     
     def _set_t1(self, dt):
@@ -1291,7 +1300,8 @@ class PPField3(PPField):
 
     def _get_t2(self):
         if not hasattr(self, '_t2'):
-            self._t2 = netcdftime.datetime(self.lbyrd, self.lbmond, self.lbdatd, self.lbhrd, self.lbmind, self.lbsecd)
+            time_class = self._time_class()
+            self._t2 = time_class(self.lbyrd, self.lbmond, self.lbdatd, self.lbhrd, self.lbmind, self.lbsecd)
         return self._t2
 
     def _set_t2(self, dt):

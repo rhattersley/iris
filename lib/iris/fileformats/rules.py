@@ -21,6 +21,7 @@ Processing of simple IF-THEN rules.
 
 import abc
 import collections
+import datetime
 import getpass
 import logging
 import logging.handlers as handlers
