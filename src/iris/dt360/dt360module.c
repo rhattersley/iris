@@ -4,6 +4,7 @@
 #include <Python.h>
 
 #include <numpy/arrayobject.h>
+#include <numpy/ufuncobject.h>
 
 
 typedef struct {
@@ -16,10 +17,15 @@ static PyArray_ArrFuncs dt360_arrfuncs;
 
 typedef struct { char c; dt360 r; } align_test;
 
-static PyObject *foo_type;
+static PyObject *date360_type;
 
 // Should this be a static global?
 static PyArray_Descr *dt360_descr;
+
+///////////////////////////////////////////////////////////
+//
+// PyArray_ArrFuncs
+//
 
 static PyObject *dt360_getitem(void *data, void *arr)
 {
@@ -27,7 +33,7 @@ static PyObject *dt360_getitem(void *data, void *arr)
     PyObject *result;
     dt360 *item = (dt360 *)data;
 
-    result = PyObject_CallFunction(foo_type, "iii", item->year, item->month,
+    result = PyObject_CallFunction(date360_type, "iii", item->year, item->month,
                                    item->day);
     return result;
 }
@@ -87,6 +93,39 @@ static npy_bool dt360_nonzero(dt360 *data, void *arr)
 
 ///////////////////////////////////////////////////////////
 //
+// ufuncs
+//
+
+dt360 dt360_subtract(dt360 d1, dt360 d2)
+{
+    return d1;  // TODO
+}
+
+#define BINARY_GEN_UFUNC(array_type, func_name, arg_type, ret_type)\
+static void array_type##_##func_name##_ufunc(char** args, npy_intp* dimensions,\
+                                   npy_intp* steps, void* data)\
+{\
+    char *ip1 = args[0], *ip2 = args[1], *op1 = args[2];\
+    npy_intp is1 = steps[0], is2 = steps[1], os1 = steps[2];\
+    npy_intp n = dimensions[0];\
+    npy_intp i;\
+    printf("In the ufunc!\n");\
+    printf("is1=%ld, is2=%ld, os1=%ld\n", is1, is2, os1);\
+    for(i = 0; i < n; i++, ip1 += is1, ip2 += is2, op1 += os1)\
+    {\
+        const array_type in1 = *(array_type *)ip1;\
+        const arg_type in2 = *(arg_type *)ip2;\
+        *((ret_type *)op1) = array_type##_##func_name(in1, in2);\
+    };\
+};
+
+#define BINARY_UFUNC(array_type, func_name, ret_type)\
+    BINARY_GEN_UFUNC(array_type, func_name, dt360, ret_type)
+
+BINARY_UFUNC(dt360, subtract, dt360)
+
+///////////////////////////////////////////////////////////
+//
 // Module functions
 //
 
@@ -133,15 +172,15 @@ PyMODINIT_FUNC initdt360(void)
     // TODO: How to handle error during this initialisation function?
 
     // Find our scalar class
-    PyObject *foo = PyImport_ImportModule("iris.foo");
-    foo_type = PyObject_GetAttrString(foo, "Foo");
+    PyObject *date_module = PyImport_ImportModule("iris.date");
+    date360_type = PyObject_GetAttrString(date_module, "date360");
     // TODO: Check it's really a type?
-    Py_DECREF(foo);
+    Py_DECREF(date_module);
 
     // Ensure NumPy is initialised - otherwise things like
     // PyArray_InitArrFuncs will bomb out with a memory fault.
     import_array();
-    //import_umath();
+    import_umath();
 
     // Define the standard array functions for our dtype.
     PyArray_InitArrFuncs(&dt360_arrfuncs);
@@ -153,11 +192,11 @@ PyMODINIT_FUNC initdt360(void)
 
     // Must explicitly set all members or we risk a memory fault later.
     dt360_descr = PyObject_New(PyArray_Descr, &PyArrayDescr_Type);
-    dt360_descr->typeobj = (PyTypeObject *)foo_type;
+    dt360_descr->typeobj = (PyTypeObject *)date360_type;
     dt360_descr->kind = 'q';
     dt360_descr->type = 'j';
     dt360_descr->byteorder = '=';
-    dt360_descr->flags = NPY_USE_GETITEM | NPY_USE_SETITEM;
+    dt360_descr->flags = NPY_USE_GETITEM | NPY_USE_SETITEM | NPY_NEEDS_INIT;
     dt360_descr->type_num = -1; // Set when registered
     dt360_descr->elsize = sizeof(dt360);
     dt360_descr->alignment = offsetof(align_test, r);
@@ -177,8 +216,6 @@ PyMODINIT_FUNC initdt360(void)
     //  - parse_datetime_metadata_from_metastr()
     //      Parses a string into the metadata.
 
-    printf("PyArray_DescrCheck: %d\n", PyArray_DescrCheck(dt360_descr));
-
     // TODO: This NumPy type number "should be stored and made available
     // by your module".
     PyArray_RegisterDataType(dt360_descr);
@@ -186,4 +223,20 @@ PyMODINIT_FUNC initdt360(void)
 
     PyModule_AddIntConstant(m, "dt360_typenum", dt360_descr->type_num);
     PyModule_AddObject(m, "dt360_descr", (PyObject *)dt360_descr);
+
+    PyObject *numpy_module = PyImport_ImportModule("numpy");
+    PyObject *numpy_dict = PyModule_GetDict(numpy_module);
+    Py_DECREF(numpy_module);
+
+    int arg_types[3];
+#define REGISTER_UFUNC(array_type, name)\
+    PyUFunc_RegisterLoopForType((PyUFuncObject *)PyDict_GetItemString(numpy_dict, #name),\
+            array_type##_descr->type_num, array_type##_##name##_ufunc, arg_types, NULL)
+
+    arg_types[0] = dt360_descr->type_num;
+    arg_types[1] = dt360_descr->type_num;
+    arg_types[2] = dt360_descr->type_num;
+    REGISTER_UFUNC(dt360, subtract);
+
+    Py_DECREF(numpy_dict);
 }
