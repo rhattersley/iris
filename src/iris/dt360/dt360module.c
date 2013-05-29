@@ -22,6 +22,14 @@ static PyObject *date360_type;
 // Should this be a static global?
 static PyArray_Descr *dt360_descr;
 
+// XXX: For debug use only
+void dump(char *prefix, PyObject *object)
+{
+    PyObject *str = PyObject_Str(object);
+    printf("%s: %s\n", prefix, PyString_AsString(str));
+    Py_DECREF(str);
+}
+
 ///////////////////////////////////////////////////////////
 //
 // PyArray_ArrFuncs
@@ -87,7 +95,6 @@ static void dt360_copyswapn(dt360 *dest, npy_intp dstride,
 
 static npy_bool dt360_nonzero(dt360 *data, void *arr)
 {
-    // TODO: Check
     return 1;
 }
 
@@ -109,8 +116,6 @@ static void array_type##_##func_name##_ufunc(char** args, npy_intp* dimensions,\
     npy_intp is1 = steps[0], is2 = steps[1], os1 = steps[2];\
     npy_intp n = dimensions[0];\
     npy_intp i;\
-    printf("In the ufunc!\n");\
-    printf("is1=%ld, is2=%ld, os1=%ld\n", is1, is2, os1);\
     for(i = 0; i < n; i++, ip1 += is1, ip2 += is2, op1 += os1)\
     {\
         const array_type in1 = *(array_type *)ip1;\
@@ -193,8 +198,8 @@ PyMODINIT_FUNC initdt360(void)
     // Must explicitly set all members or we risk a memory fault later.
     dt360_descr = PyObject_New(PyArray_Descr, &PyArrayDescr_Type);
     dt360_descr->typeobj = (PyTypeObject *)date360_type;
-    dt360_descr->kind = 'q';
-    dt360_descr->type = 'j';
+    dt360_descr->kind = 't';
+    dt360_descr->type = 't';
     dt360_descr->byteorder = '=';
     dt360_descr->flags = NPY_USE_GETITEM | NPY_USE_SETITEM | NPY_NEEDS_INIT;
     dt360_descr->type_num = -1; // Set when registered
@@ -218,6 +223,7 @@ PyMODINIT_FUNC initdt360(void)
 
     // TODO: This NumPy type number "should be stored and made available
     // by your module".
+    // TODO: Clarify NumPy docs re. reference counting behaviour
     PyArray_RegisterDataType(dt360_descr);
     assert(dt360_descr->type_num != -1);
 
@@ -228,15 +234,13 @@ PyMODINIT_FUNC initdt360(void)
     PyObject *numpy_dict = PyModule_GetDict(numpy_module);
     Py_DECREF(numpy_module);
 
-    int arg_types[3];
 #define REGISTER_UFUNC(array_type, name)\
     PyUFunc_RegisterLoopForType((PyUFuncObject *)PyDict_GetItemString(numpy_dict, #name),\
-            array_type##_descr->type_num, array_type##_##name##_ufunc, arg_types, NULL)
+            array_type##_descr->type_num, array_type##_##name##_ufunc, arg_types, NULL);
 
+    int arg_types[3];
     arg_types[0] = dt360_descr->type_num;
     arg_types[1] = dt360_descr->type_num;
     arg_types[2] = dt360_descr->type_num;
     REGISTER_UFUNC(dt360, subtract);
-
-    Py_DECREF(numpy_dict);
 }

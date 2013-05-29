@@ -97,6 +97,8 @@ Format-specific translation behaviour can be modified by using:
     :func:`iris.fileformats.grib.add_load_rules`
 
 """
+
+foo = '''
 import itertools
 import logging
 import os
@@ -343,3 +345,4 @@ save = iris.io.save
 def sample_data_path(*path_to_join):
     """Given the sample data resource, returns the full path to the file."""
     return os.path.join(iris.config.SAMPLE_DATA_DIR, *path_to_join)
+    '''
