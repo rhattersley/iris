@@ -43,6 +43,10 @@ static PyObject *dt360_getitem(void *data, void *arr)
 
     result = PyObject_CallFunction(date360_type, "iii", item->year, item->month,
                                    item->day);
+    if (result == NULL && PyErr_ExceptionMatches(PyExc_AssertionError)) {
+        PyErr_Clear();
+        Py_RETURN_NONE;
+    }
     return result;
 }
 
@@ -50,6 +54,13 @@ static int dt360_setitem(PyObject *item, void *data, void *arr)
 {
     dt360 d;
 
+    int ok = PyObject_IsInstance(item, date360_type);
+    if (ok == 0) {
+        PyErr_SetNone(PyExc_TypeError);
+    }
+    if (ok != 1) {
+        return -1;
+    }
     d.year = PyInt_AsLong(PyObject_GetAttrString(item, "year"));
     d.month = PyInt_AsLong(PyObject_GetAttrString(item, "month"));
     d.day = PyInt_AsLong(PyObject_GetAttrString(item, "day"));
@@ -64,37 +75,46 @@ static int dt360_setitem(PyObject *item, void *data, void *arr)
     return 0;
 }
 
-static void dt360_copyswap(char *dest, char *src, int swap, void *NPY_UNUSED(arr))
+static void dt360_copyswapn(void *dest, npy_intp dstride,
+                            void *src, npy_intp sstride,
+                            npy_intp n, int swap, void *NPY_UNUSED(arr))
 {
+    dt360 *dest_item = (dt360 *)dest;
+    dt360 *src_item = (dt360 *)src;
+
     PyArray_Descr *descr;
     descr = PyArray_DescrFromType(NPY_INT32);
-    descr->f->copyswapn(dest, sizeof(int32_t), src, sizeof(int32_t),
+    descr->f->copyswapn(&dest_item->year, dstride, &src_item->year, sstride,
+                        n, swap, NULL);
+    Py_DECREF(descr);
+    descr = PyArray_DescrFromType(NPY_UINT8);
+    descr->f->copyswapn(&dest_item->month, dstride, &src_item->month, sstride,
+                        n, swap, NULL);
+    descr->f->copyswapn(&dest_item->day, dstride, &src_item->day, sstride,
+                        n, swap, NULL);
+    Py_DECREF(descr);
+}
+
+static void dt360_copyswap(void *dest, void *src, int swap,
+                           void *NPY_UNUSED(arr))
+{
+    dt360 *dest_item = (dt360 *)dest;
+    dt360 *src_item = (dt360 *)src;
+
+    PyArray_Descr *descr;
+    descr = PyArray_DescrFromType(NPY_INT32);
+    descr->f->copyswapn(dest_item, sizeof(int32_t), src_item, sizeof(int32_t),
                         1, swap, NULL);
     Py_DECREF(descr);
     descr = PyArray_DescrFromType(NPY_UINT8);
-    descr->f->copyswapn(dest + sizeof(int32_t), sizeof(uint8_t),
-                        src + sizeof(int32_t), sizeof(uint8_t), 2, swap, NULL);
+    descr->f->copyswapn(&(dest_item->month), sizeof(uint8_t),
+                        &(src_item->month), sizeof(uint8_t), 2, swap, NULL);
     Py_DECREF(descr);
 }
 
-static void dt360_copyswapn(dt360 *dest, npy_intp dstride,
-                      dt360 *src, npy_intp sstride,
-                      npy_intp n, int swap, void *NPY_UNUSED(arr))
+static npy_bool dt360_nonzero(void *data, void *arr)
 {
-    PyArray_Descr *descr;
-    descr = PyArray_DescrFromType(NPY_INT32);
-    descr->f->copyswapn(&dest->year, dstride, &src->year, sstride,
-                        n, swap, NULL);
-    Py_DECREF(descr);
-    descr = PyArray_DescrFromType(NPY_UINT8);
-    descr->f->copyswapn(&dest->month, dstride, &src->month, sstride,
-                        n, swap, NULL);
-    descr->f->copyswapn(&dest->day, dstride, &src->day, sstride, n, swap, NULL);
-    Py_DECREF(descr);
-}
-
-static npy_bool dt360_nonzero(dt360 *data, void *arr)
-{
+    //dt360 *item = (dt360 *)data;
     return 1;
 }
 
