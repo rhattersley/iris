@@ -74,13 +74,39 @@ class Test_cmp(tests.IrisTest):
         self.assertEqual(ta >= tb, not less)
         self.assertEqual(ta > tb, not(less or equal))
 
-    def test_cmp(self):
+    def test_pos(self):
         t1 = Time360(2013, 6, 24)
         t1_b = Time360(2013, 6, 24)
         t2 = Time360(2013, 6, 25)
+        # Deliberately choose a year value whose little-endian
+        # representation will flush out problems with a naive
+        # byte-by-byte comparison.
+        t3 = Time360(2053, 6, 25)
 
         self._test(t1, t1, False, True)
         self._test(t1, t1_b, False, True)
+        self._test(t1, t2, True, False)
+        self._test(t2, t1, False, False)
+        self._test(t1, t3, True, False)
+        self._test(t3, t1, False, False)
+
+    def test_neg_pos(self):
+        # Deliberately choose a negative value whose little-endian,
+        # twos-complement representation starts with a byte which is
+        # less than the first byte of the positive value.
+        t1 = Time360(-2054, 6, 24)
+        t2 = Time360(2013, 6, 24)
+
+        self._test(t1, t2, True, False)
+        self._test(t2, t1, False, False)
+
+    def test_neg(self):
+        # Deliberately choose two year values whose little-endian
+        # representations will flush out problems with a naive
+        # byte-by-byte comparison.
+        t1 = Time360(-2054, 6, 24)
+        t2 = Time360(-2013, 6, 24)
+
         self._test(t1, t2, True, False)
         self._test(t2, t1, False, False)
 

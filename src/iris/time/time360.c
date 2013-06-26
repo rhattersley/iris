@@ -220,10 +220,7 @@ Time360_subtract(PyObject *o1, PyObject *o2)
 static int
 Time360_Compare(Time360 *t1, Time360 *t2)
 {
-    /* XXX Defer to a time360_cmp_time360 function?
-     * e.g. return time360_cmp_time360(t1->time, t2->time);
-     */
-    return memcmp(&t1->time, &t2->time, sizeof(datetime));
+    return time360_compare(&t1->time, &t2->time);
 }
 
 static long

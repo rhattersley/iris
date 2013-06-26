@@ -34,9 +34,11 @@ typedef struct {
  * `time360` functions
  */
 
+int time360_compare(const datetime *t1, const datetime *t2);
 datetime time360_add_timedelta(datetime t, timedelta delta);
 datetime time360_subtract_timedelta(datetime t, timedelta delta);
 timedelta time360_subtract_time360(datetime t1, datetime t2);
+int timedelta_compare(const timedelta *td1, const timedelta *td2);
 int8_t timedelta_equal_timedelta(timedelta td1, timedelta td2);
 int8_t timedelta_sign(timedelta td1);
 

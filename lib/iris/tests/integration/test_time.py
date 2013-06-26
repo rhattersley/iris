@@ -46,7 +46,7 @@ class TestTimedeltaArray(tests.IrisTest):
 
     def test_getitem(self):
         delta = timedelta(1)
-        a = np.array([delta])
+        a = np.array([delta], dtype=timedelta_dtype)
         self.assertIsInstance(a[0], timedelta)
         self.assertEqual(a[0], delta)
 
@@ -59,13 +59,25 @@ class TestTimedeltaArray(tests.IrisTest):
         self.assertNotEqual(a[2], delta)
 
     def test_argmax(self):
+        a = np.array([timedelta(3, 12, 100), timedelta(0, 15, 4), timedelta(-5),
+                      timedelta(2, 4), timedelta(0, 1)], dtype=timedelta_dtype)
+        self.assertEqual(np.argmax(a), 0)
+
         a = np.array([timedelta(2), timedelta(0), timedelta(-5),
-                      timedelta(2, 4), timedelta(0, 1)])
+                      timedelta(2, 4), timedelta(0, 1)], dtype=timedelta_dtype)
         self.assertEqual(np.argmax(a), 3)
+
+        a = np.array([timedelta(-2), timedelta(0), timedelta(-5)],
+                     dtype=timedelta_dtype)
+        self.assertEqual(np.argmax(a), 1)
+
+        a = np.array([timedelta(-2), timedelta(-1), timedelta(-5)],
+                     dtype=timedelta_dtype)
+        self.assertEqual(np.argmax(a), 1)
 
     def test_sign(self):
         a = np.array([timedelta(2), timedelta(0), timedelta(-5),
-                      timedelta(2, 4), timedelta(0, 1)])
+                      timedelta(2, 4), timedelta(0, 1)], dtype=timedelta_dtype)
         self.assertArrayEqual(np.sign(a), np.array([1, 0, -1, 1, 1]))
 
     def XXX_test_subtract(self):
@@ -85,12 +97,7 @@ class TestTime360Array(tests.IrisTest):
 
     def test_getitem(self):
         t = Time360(2013, 6, 20)
-        a = np.array([t])
-        try:
-            dt = np.dtype('f4')
-        except TypeError:
-            print 'OK .. so there was a type error'
-        dt = np.dtype('f4')
+        a = np.array([t], dtype=time360)
         self.assertIsInstance(a[0], Time360)
         self.assertEqual(a[0], t)
 

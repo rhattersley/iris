@@ -97,6 +97,30 @@ copyswap(void *dest, void *src, int swap, void *NPY_UNUSED(arr))
     Py_DECREF(descr);
 }
 
+static int
+compare(const timedelta *td1, const timedelta *td2, void *NPY_UNUSED(arr))
+{
+    return timedelta_compare(td1, td2);
+}
+
+static int
+argmax(const timedelta *data, npy_intp n, npy_intp *max_ind,
+       void *NPY_UNUSED(arr))
+{
+    const timedelta *max;
+    npy_intp i;
+
+    max = data++;
+    *max_ind = 0;
+    for (i = 1; i < n; i++, data++) {
+        if (timedelta_compare(max, data) == -1) {
+            max = data;
+            *max_ind = i;
+        }
+    }
+    return 0;
+}
+
 /*
  * ufuncs
  */
@@ -154,6 +178,8 @@ create_dtype(void)
     arrfuncs->setitem = setitem;
     arrfuncs->copyswapn = copyswapn;
     arrfuncs->copyswap = copyswap;
+    arrfuncs->compare = (PyArray_CompareFunc *)compare;
+    arrfuncs->argmax = (PyArray_ArgFunc *)argmax;
 
     /* Must explicitly set all members or we risk a memory fault later. */
     dtype = PyObject_New(PyArray_Descr, &PyArrayDescr_Type);
@@ -168,7 +194,7 @@ create_dtype(void)
      */
     dtype->flags = NPY_USE_GETITEM | NPY_USE_SETITEM | NPY_NEEDS_INIT | NPY_NEEDS_PYAPI;
     dtype->type_num = -1; /* Set when registered */
-    dtype->elsize = sizeof(datetime);
+    dtype->elsize = sizeof(timedelta);
     dtype->alignment = offsetof(align_test, r);
     dtype->subarray = NULL;
     dtype->fields = NULL;
@@ -210,10 +236,8 @@ register_timedelta_dtype(PyObject *module)
         (PyUFuncObject *)PyDict_GetItemString(numpy_dict, "equal"),
         dtype->type_num, timedelta_equal_timedelta_ufunc, arg_types, NULL);
 
-    // XXX Not convinced NumPy pays attention to this!
     arg_types[0] = dtype->type_num;
     arg_types[1] = NPY_INT8;
-    //arg_types[1] = dtype->type_num;
     PyUFunc_RegisterLoopForType(
         (PyUFuncObject *)PyDict_GetItemString(numpy_dict, "sign"),
         dtype->type_num, timedelta_sign_ufunc, arg_types, NULL);
