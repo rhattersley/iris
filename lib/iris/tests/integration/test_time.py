@@ -22,11 +22,18 @@ Integration tests for time handling.
 # before importing anything else.
 import iris.tests as tests
 
+from copy import copy
 from datetime import timedelta
 
 import numpy as np
 
 from iris.time import Time360, time360, timedelta_dtype
+
+
+class TestTime360(tests.IrisTest):
+    def test_copy(self):
+        t = Time360(2013, 6, 26)
+        self.assertEqual(t, copy(t))
 
 
 class TestTimedeltaArray(tests.IrisTest):

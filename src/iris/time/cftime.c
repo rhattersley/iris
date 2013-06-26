@@ -89,30 +89,32 @@ time360_subtract_timedelta(datetime t, timedelta delta)
         microsecond += 1000000;
         second -= 1;
     }
-    second += delta.seconds;
-    if (second >= 60) {
-        second -= 60;
-        minute += 1;
+    second -= (delta.seconds % 60);
+    if (second < 0) {
+        second += 60;
+        minute -= 1;
     }
-    if (minute >= 60) {
-        minute -= 60;
-        hour += 1;
+    minute -= (delta.seconds / 60) % 60;
+    if (minute < 0) {
+        minute += 60;
+        hour -= 1;
     }
-    if (hour >= 24) {
-        hour -= 24;
-        day += 1;
+    hour -= (delta.seconds / 3600);
+    if (hour < 0) {
+        hour += 24;
+        day -= 1;
     }
-    day += delta.days % 30;
-    if (day >= 30) {
-        day -= 30;
-        month += 1;
+    day -= delta.days % 30;
+    if (day < 0) {
+        day += 30;
+        month -= 1;
     }
-    month += (delta.days / 30) % 12;
-    if (month >= 12) {
-        month -= 12;
-        year += 1;
+    month -= (delta.days / 30) % 12;
+    if (month < 0) {
+        month += 12;
+        year -= 1;
     }
-    year += delta.days / 360;
+    year -= delta.days / 360;
     return (datetime) {year, month, day, hour, minute, second, microsecond};
 }
 

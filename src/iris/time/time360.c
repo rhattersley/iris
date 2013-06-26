@@ -207,8 +207,8 @@ Time360_subtract(PyObject *o1, PyObject *o2)
             datetime dt;
             timedelta delta;
 
-            memcpy(&delta, &((PyDateTime_Delta *)o1)->days, sizeof(delta));
-            dt = time360_subtract_timedelta(((Time360 *)o2)->time, delta);
+            memcpy(&delta, &((PyDateTime_Delta *)o2)->days, sizeof(delta));
+            dt = time360_subtract_timedelta(((Time360 *)o1)->time, delta);
             result = new_Time360_from_datetime(dt);
         }
     }
@@ -238,9 +238,35 @@ Time360_Hash(Time360 *t)
     return hash;
 }
 
+static PyObject *
+Time360_getstate(Time360 *self)
+{
+    return Py_BuildValue("(iiiiiii)",
+                         YEAR(self), MONTH(self), DAY(self),
+                         HOUR(self), MINUTE(self), SECOND(self),
+                         MICROSECOND(self));
+}
+
+static PyObject *
+Time360_setstate(Time360 *self, PyObject *args)
+{
+    if (!PyArg_ParseTuple(args, "iiiiiii",
+                          &YEAR(self), &MONTH(self), &DAY(self),
+                          &HOUR(self), &MINUTE(self), &SECOND(self),
+                          &MICROSECOND(self)))
+        return NULL;
+    return self;
+}
+
 static PyNumberMethods Time360_NumberMethods = {
     Time360_add,
     Time360_subtract,
+};
+
+static PyMethodDef Time360_methods[] = {
+    {"__getstate__", (PyCFunction)Time360_getstate, METH_NOARGS, "TODO"},
+    {"__setstate__", (PyCFunction)Time360_setstate, METH_O, "TODO"},
+    {NULL}
 };
 
 static PyTypeObject Time360Type = {
@@ -272,7 +298,7 @@ static PyTypeObject Time360Type = {
     0,                                                  /* tp_weaklistoffset */
     0,                                                  /* tp_iter */
     0,                                                  /* tp_iternext */
-    0, //date_methods,                                       /* tp_methods */
+    Time360_methods,                                    /* tp_methods */
     0,                                                  /* tp_members */
     0, //date_getset,                                        /* tp_getset */
     0,                                                  /* tp_base */

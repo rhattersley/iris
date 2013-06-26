@@ -1143,6 +1143,8 @@ class PPField(object):
         return np.concatenate([[points - delta], [points + delta]]).T 
 
     def time_unit(self, time_unit, epoch='epoch'):
+        if self.lbtim.ic == 2:
+            return time_unit
         return iris.unit.Unit('%s since %s' % (time_unit, epoch), calendar=self.calendar)
 
     def coord_system(self):

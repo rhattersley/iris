@@ -184,7 +184,22 @@ class Test_add(tests.IrisTest):
             t_std + t_360
 
 
-class Test_sub(tests.IrisTest):
+class Test_sub_timedelta(tests.IrisTest):
+    def test_ok(self):
+        t = Time360(1998, 12, 1)
+        td = timedelta(hours=6477)
+        r = t - td
+        self.assertIsInstance(r, Time360)
+        self.assertEqual(r, Time360(1998, 3, 1, 3))
+
+    def test_invalid_order(self):
+        t = Time360(2013, 6, 26)
+        td = timedelta(1)
+        with self.assertRaises(TypeError):
+            td - t
+
+
+class Test_sub_Time360(tests.IrisTest):
     def _test(self, t1, t2, expected):
         r = t2 - t1
         self.assertIsInstance(r, timedelta)
