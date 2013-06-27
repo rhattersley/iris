@@ -239,23 +239,15 @@ Time360_Hash(Time360 *t)
 }
 
 static PyObject *
-Time360_getstate(Time360 *self)
+Time360_reduce(Time360 *self, PyObject *arg)
 {
-    return Py_BuildValue("(iiiiiii)",
-                         YEAR(self), MONTH(self), DAY(self),
+    PyObject *args;
+
+    args = Py_BuildValue("(iiiiiii)",
+                         YEAR(self), MONTH(self) + 1, DAY(self) + 1,
                          HOUR(self), MINUTE(self), SECOND(self),
                          MICROSECOND(self));
-}
-
-static PyObject *
-Time360_setstate(Time360 *self, PyObject *args)
-{
-    if (!PyArg_ParseTuple(args, "iiiiiii",
-                          &YEAR(self), &MONTH(self), &DAY(self),
-                          &HOUR(self), &MINUTE(self), &SECOND(self),
-                          &MICROSECOND(self)))
-        return NULL;
-    return self;
+    return Py_BuildValue("(ON)", Py_TYPE(self), args);
 }
 
 static PyNumberMethods Time360_NumberMethods = {
@@ -264,8 +256,7 @@ static PyNumberMethods Time360_NumberMethods = {
 };
 
 static PyMethodDef Time360_methods[] = {
-    {"__getstate__", (PyCFunction)Time360_getstate, METH_NOARGS, "TODO"},
-    {"__setstate__", (PyCFunction)Time360_setstate, METH_O, "TODO"},
+    {"__reduce__", (PyCFunction)Time360_reduce, METH_NOARGS, "TODO"},
     {NULL}
 };
 
