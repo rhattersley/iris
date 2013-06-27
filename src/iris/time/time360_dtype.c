@@ -196,7 +196,9 @@ PyArray_Descr *create_dtype(PyTypeObject *time360Type)
     dtype->names = NULL;
     dtype->f = arrfuncs;
     dtype->metadata = NULL;
-    /*dtype->c_metadata = NULL; */
+#if NPY_API_VERSION >= NPY_1_7_API_VERSION
+    dtype->c_metadata = NULL;
+#endif
 
     /* TODO: This NumPy type number "should be stored and made available
      * by your module".
