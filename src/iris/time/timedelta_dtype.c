@@ -201,7 +201,10 @@ create_dtype(void)
     dtype->names = NULL;
     dtype->f = arrfuncs;
     dtype->metadata = NULL;
-#if NPY_API_VERSION >= NPY_1_7_API_VERSION
+/* Check for v1.7+
+ * NB. Can't use NPY_1_7_API_VERSION as it isn't defined prior to v1.7.
+ * */
+#if NPY_API_VERSION >= 0x00000007
     dtype->c_metadata = NULL;
 #endif
 

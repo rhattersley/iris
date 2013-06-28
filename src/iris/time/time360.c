@@ -5,6 +5,12 @@
  */
 #include <datetime.h>
 
+#define NPY_NO_DEPRECATED_API NPY_API_VERSION
+
+#define PY_ARRAY_UNIQUE_SYMBOL time_ARRAY_API
+#define NO_IMPORT_ARRAY
+#include <numpy/arrayobject.h>
+
 #include "cftime.h"
 
 typedef struct {
@@ -313,6 +319,10 @@ register_Time360(PyObject *module)
     PyDateTime_IMPORT;
 
     Time360Type.tp_new = PyType_GenericNew;
+    /* Subclass np.generic so that np.array(Time360) automatically uses
+     * our custom dtype.
+     */
+    Time360Type.tp_base = &PyGenericArrType_Type;
     if (PyType_Ready(&Time360Type) < 0)
         return NULL;
 

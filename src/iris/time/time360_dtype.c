@@ -165,7 +165,7 @@ static void time360_subtract_time360_ufunc(
 
 typedef struct { char c; datetime r; } align_test;
 
-PyArray_Descr *create_dtype(PyTypeObject *time360Type)
+PyArray_Descr *create_dtype(PyTypeObject *Time360Type)
 {
     PyArray_Descr *dtype;
 
@@ -179,7 +179,7 @@ PyArray_Descr *create_dtype(PyTypeObject *time360Type)
 
     /* Must explicitly set all members or we risk a memory fault later. */
     dtype = PyObject_New(PyArray_Descr, &PyArrayDescr_Type);
-    dtype->typeobj = time360Type;
+    dtype->typeobj = Time360Type;
     dtype->kind = 't';
     dtype->type = 't';
     dtype->byteorder = '=';
@@ -196,7 +196,10 @@ PyArray_Descr *create_dtype(PyTypeObject *time360Type)
     dtype->names = NULL;
     dtype->f = arrfuncs;
     dtype->metadata = NULL;
-#if NPY_API_VERSION >= NPY_1_7_API_VERSION
+/* Check for v1.7+
+ * NB. Can't use NPY_1_7_API_VERSION as it isn't defined prior to v1.7.
+ * */
+#if NPY_API_VERSION >= 0x00000007
     dtype->c_metadata = NULL;
 #endif
 
@@ -211,13 +214,13 @@ PyArray_Descr *create_dtype(PyTypeObject *time360Type)
 }
 
 void
-register_time360_dtype(PyObject *module, PyTypeObject *time360Type,
+register_time360_dtype(PyObject *module, PyTypeObject *Time360Type,
                        PyArray_Descr *timedelta_dtype)
 {
     PyArray_Descr *dtype;
     int arg_types[3];
 
-    dtype = create_dtype(time360Type);
+    dtype = create_dtype(Time360Type);
     PyModule_AddObject(module, "time360", (PyObject *)dtype);
 
     // TODO: Move these variable declarations

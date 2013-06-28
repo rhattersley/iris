@@ -37,7 +37,14 @@ class TestTime360(tests.IrisTest):
 
 
 class TestTimedeltaArray(tests.IrisTest):
-    def test_auto_dtype(self):
+    def test_auto_dtype_scalar(self):
+        # Check that an array of datetime.timedelta objects is given
+        # the `timedelta_dtype` dtype.
+        delta = timedelta(1)
+        a = np.array(delta)
+        self.assertEqual(a.dtype, timedelta_dtype)
+
+    def test_auto_dtype_list(self):
         # Check that an array of datetime.timedelta objects is given
         # the `timedelta_dtype` dtype.
         delta = timedelta(1)
@@ -95,7 +102,14 @@ class TestTimedeltaArray(tests.IrisTest):
 
 
 class TestTime360Array(tests.IrisTest):
-    def test_auto_dtype(self):
+    def test_auto_dtype_scalar(self):
+        # Check that an array of Time360 objects is given the `time360`
+        # dtype.
+        t = Time360(2013, 6, 20)
+        a = np.array(t)
+        self.assertEqual(a.dtype, time360)
+
+    def test_auto_dtype_list(self):
         # Check that an array of Time360 objects is given the `time360`
         # dtype.
         t = Time360(2013, 6, 20)

@@ -28,7 +28,7 @@ PyMODINIT_FUNC
 inittime(void)
 {
     PyObject *module;
-    PyTypeObject *time360Type;
+    PyTypeObject *Time360Type;
     PyArray_Descr *timedelta_dtype;
 
     module = Py_InitModule3("time", NULL,
@@ -39,9 +39,8 @@ inittime(void)
     import_array();
     import_ufunc();
 
-    time360Type = register_Time360(module);
+    /* TODO: Error handling. E.g. If Time360Type is NULL. */
+    Time360Type = register_Time360(module);
     timedelta_dtype = register_timedelta_dtype(module);
-    //PyModule_AddObject(module, "timedelta_dtype", Py_None);
-    register_time360_dtype(module, time360Type, timedelta_dtype);
-    //PyModule_AddObject(module, "time360", Py_None);
+    register_time360_dtype(module, Time360Type, timedelta_dtype);
 }
