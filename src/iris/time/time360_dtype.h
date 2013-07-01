@@ -7,8 +7,7 @@
 extern "C" {
 #endif
 
-void register_time360_dtype(PyObject *module, PyTypeObject *Time360Type,
-                            PyArray_Descr *timedelta_dtype);
+void register_time360_dtype(PyObject *module, PyTypeObject *Time360Type);
 
 #ifdef __cplusplus
 }

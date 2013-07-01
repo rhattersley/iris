@@ -146,7 +146,7 @@ static void array_type##_##func_name##_ufunc(\
     }\
 }
 
-//BINARY_GEN_UFUNC(time360, subtract, datetime, timedelta)
+//BINARY_GEN_UFUNC(time360, subtract, datetime, npy_timedelta)
 //
 static void time360_subtract_time360_ufunc(
     char** args, npy_intp* dimensions, npy_intp* steps, void* data)
@@ -159,7 +159,7 @@ static void time360_subtract_time360_ufunc(
     {
         const datetime in1 = *(datetime *)ip1;
         const datetime in2 = *(datetime *)ip2;
-        *((timedelta *)op1) = time360_subtract_time360(in1, in2);
+        *((npy_timedelta *)op1) = time360_subtract_time360(in1, in2);
     }
 }
 
@@ -214,8 +214,7 @@ PyArray_Descr *create_dtype(PyTypeObject *Time360Type)
 }
 
 void
-register_time360_dtype(PyObject *module, PyTypeObject *Time360Type,
-                       PyArray_Descr *timedelta_dtype)
+register_time360_dtype(PyObject *module, PyTypeObject *Time360Type)
 {
     PyArray_Descr *dtype;
     int arg_types[3];
@@ -230,7 +229,7 @@ register_time360_dtype(PyObject *module, PyTypeObject *Time360Type,
 
     arg_types[0] = dtype->type_num;
     arg_types[1] = dtype->type_num;
-    arg_types[2] = timedelta_dtype->type_num;
+    arg_types[2] = NPY_TIMEDELTA;
     PyUFunc_RegisterLoopForType(
         (PyUFuncObject *)PyDict_GetItemString(numpy_dict, "subtract"),
         dtype->type_num, time360_subtract_time360_ufunc, arg_types, NULL);

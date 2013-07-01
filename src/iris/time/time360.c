@@ -165,6 +165,7 @@ Time360_add(PyObject *o1, PyObject *o2)
             result = time360_add_timedelta(((Time360 *)o1)->time, delta);
             return new_Time360_from_datetime(result);
         }
+        /* TODO: Allow Time360 + np.timedelta64[us] */
     } else {
         /* ??? + Time360 */
         if (PyDelta_Check(o1)) {
@@ -176,6 +177,7 @@ Time360_add(PyObject *o1, PyObject *o2)
             result = time360_add_timedelta(((Time360 *)o2)->time, delta);
             return new_Time360_from_datetime(result);
         }
+        /* TODO: Allow np.timedelta64[us] + Time360 */
     }
     Py_INCREF(Py_NotImplemented);
     return Py_NotImplemented;
@@ -217,6 +219,7 @@ Time360_subtract(PyObject *o1, PyObject *o2)
             dt = time360_subtract_timedelta(((Time360 *)o1)->time, delta);
             result = new_Time360_from_datetime(dt);
         }
+        /* TODO: Allow Time360 - np.timedelta64 */
     }
     if (result == Py_NotImplemented)
         Py_INCREF(Py_NotImplemented);

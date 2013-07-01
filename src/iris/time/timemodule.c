@@ -10,7 +10,6 @@
 #define PY_UFUNC_UNIQUE_SYMBOL time_UFUNC_API
 #include <numpy/ufuncobject.h>
 
-#include "timedelta_dtype.h"
 #include "time360.h"
 #include "time360_dtype.h"
 
@@ -29,7 +28,6 @@ inittime(void)
 {
     PyObject *module;
     PyTypeObject *Time360Type;
-    PyArray_Descr *timedelta_dtype;
 
     module = Py_InitModule3("time", NULL,
                        "Support for CF-netCDF time values.");
@@ -41,6 +39,5 @@ inittime(void)
 
     /* TODO: Error handling. E.g. If Time360Type is NULL. */
     Time360Type = register_Time360(module);
-    timedelta_dtype = register_timedelta_dtype(module);
-    register_time360_dtype(module, Time360Type, timedelta_dtype);
+    register_time360_dtype(module, Time360Type);
 }

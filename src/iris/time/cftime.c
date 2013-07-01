@@ -1,5 +1,4 @@
-/* Defines the routines to manipulate the underlying time/time-delta C
- * structures.
+/* Routines to manipulate the underlying time C structures.
  */
 
 #include "cftime.h"
@@ -118,21 +117,29 @@ time360_subtract_timedelta(datetime t, timedelta delta)
     return (datetime) {year, month, day, hour, minute, second, microsecond};
 }
 
-timedelta
+npy_timedelta
 time360_subtract_time360(datetime t1, datetime t2)
 {
-    timedelta delta;
+    npy_timedelta delta;
 
-    /* TODO: Consider overflow of days from large year deltas. */
-    delta.days = (t1.year - t2.year) * 360;
-    delta.days += (t1.month - t2.month) * 30;
-    delta.days += t1.day - t2.day;
+    // typedef npy_int64 npy_timedelta
+    // typedef struct {
+    //     npy_int64 day;
+    //     npy_int32 sec, us, ps, as;
+    // } npy_timedeltastruct;
 
-    delta.seconds = (t1.hour - t2.hour) * 3600;
-    delta.seconds += (t1.minute - t2.minute) * 60;
-    delta.seconds += t1.second - t2.second;
+    // Use?
+    // npy_datetime
+    // PyArray_TimedeltaStructToTimedelta(NPY_DATETIMEUNIT fr,
+    //                                    npy_timedeltastruct *d)
+    // Check to see what it does with the resolution.
 
-    delta.microseconds = t1.microsecond - t2.microsecond;
+    /* TODO: Consider overflow from large (~300000) year deltas. */
+    delta = ((t1.year - t2.year) * 360 + (t1.month - t2.month) * 30 +
+             t1.day - t2.day) * 86400000000;
+    delta += ((t1.hour - t2.hour) * 3600 + (t1.minute - t2.minute) * 60 +
+              t1.second - t2.second) * 1000000;
+    delta += t1.microsecond - t2.microsecond;
 
     return delta;
 }

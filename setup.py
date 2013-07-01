@@ -237,7 +237,6 @@ setup(
         setuptools.Extension('iris.time',
                              ['src/iris/time/cftime.c',
                               'src/iris/time/time360.c',
-                              'src/iris/time/timedelta_dtype.c',
                               'src/iris/time/time360_dtype.c',
                               'src/iris/time/timemodule.c',],
                              include_dirs=[np.get_include()]),
