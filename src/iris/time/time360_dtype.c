@@ -30,7 +30,7 @@ time360_getitem(void *data, void *arr)
     PyTypeObject *scalar_type;
 
     /* TODO: Consider supporting "misaligned and/or swapped" arrays */
-    if (!PyArray_ISBEHAVED(arr)) {
+    if (!PyArray_ISBEHAVED_RO(arr)) {
         PyErr_SetString(PyExc_ValueError, "getitem on misbehaved array");
         return NULL;
     }
