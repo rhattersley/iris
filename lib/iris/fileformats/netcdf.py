@@ -87,6 +87,8 @@ _FACTORY_DEFNS = {
         std_name='atmosphere_hybrid_height_coordinate',
         formula_terms_format='a: {delta} b: {sigma} orog: {orography}'), }
 
+_TIME_SCALES = {'second': 1, 'minute': 60, 'hour': 3600, 'day': 86400}
+
 
 class CFNameCoordMap(object):
     """Provide a simple CF name to CF coordinate mapping."""
@@ -749,7 +751,31 @@ class Saver(object):
                         iris.coord_systems.TransverseMercator):
             units = 'm'
 
+        elif coord.points.dtype == iris.time.time360:
+            print 'units:', units,
+            units = '{step} since {reference!s}'.format(
+                step=units.split()[0],
+                reference=coord.points.flat[0])
+            print '->', units
+
         return coord.standard_name, coord.long_name, units
+
+    def _create_coord_var(self, cf_name, values, units, cf_dimensions,
+                          points):
+        dtype = values.dtype
+        if dtype == iris.time.time360:
+            dtype = np.float32
+            # Convert to timedeltas since first time.
+            deltas = values.flatten() - points.flat[0]
+            # Convert to number of "unit" since first time.
+            unit = units.name.split()[0].rstrip('s')
+            scale = _TIME_SCALES[unit]
+            deltas = [delta.total_seconds() / scale for delta in deltas]
+            values = np.empty_like(values, dtype=dtype)
+            values[...] = deltas
+        cf_var = self._dataset.createVariable(cf_name, dtype, cf_dimensions)
+        cf_var[:] = values
+        return cf_var
 
     def _create_cf_bounds(self, coord, cf_var, cf_name):
         """
@@ -781,10 +807,9 @@ class Saver(object):
                 self._dataset.createDimension(bounds_dimension_name, n_bounds)
 
             cf_var.bounds = cf_name + '_bnds'
-            cf_var_bounds = self._dataset.createVariable(
-                cf_var.bounds, coord.bounds.dtype,
-                cf_var.dimensions + (bounds_dimension_name,))
-            cf_var_bounds[:] = coord.bounds
+            cf_var_bounds = self._create_coord_var(
+                cf_var.bounds, coord.bounds, coord.units,
+                cf_var.dimensions + (bounds_dimension_name,), coord.points)
 
     def _get_cube_variable_name(self, cube):
         """
@@ -911,17 +936,14 @@ class Saver(object):
                 cf_name = cf_dimensions[0]
 
             # Create the CF-netCDF variable.
-            cf_var = self._dataset.createVariable(cf_name, coord.points.dtype,
-                                                  cf_dimensions)
+            cf_var = self._create_coord_var(cf_name, coord.points, coord.units,
+                                            cf_dimensions, coord.points)
 
             # Add the axis attribute for spatio-temporal CF-netCDF coordinates.
             if coord in cf_coordinates:
                 axis = iris.util.guess_coord_axis(coord)
                 if axis is not None and axis.lower() in SPATIO_TEMPORAL_AXES:
                     cf_var.axis = axis.upper()
-
-            # Add the data to the CF-netCDF variable.
-            cf_var[:] = coord.points
 
             # Create the associated CF-netCDF bounds variable.
             self._create_cf_bounds(coord, cf_var, cf_name)
