@@ -31,9 +31,7 @@ install:
   - export IRIS_SAMPLE_DATA_SUFFIX=$(echo "${IRIS_SAMPLE_DATA_REF}" | sed "s/^v//")
 
   # Switch off virtualenv so we can use apt-get for Python packages.
-  - which pip
   - deactivate
-  - which pip
 
   - QUIET=`pwd`/.travis_no_output
   - OPTIONAL=`pwd`/.travis_optional
@@ -44,7 +42,7 @@ install:
   - $QUIET sudo apt-get update
 
 # Get ready...
-  - sudo apt-get -q install python-pip
+  - sudo apt-get -qq install python-pip
 
 # Mandatory dependencies
   - $QUIET sudo pip install --use-mirrors mock nose pep8
