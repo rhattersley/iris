@@ -12,6 +12,9 @@
 language: python
 python:
   - 2.7
+env:
+# - INSTALL_OPTIONAL_DEPENDENCIES=true
+ - INSTALL_OPTIONAL_DEPENDENCIES=false
 
 git:
   depth: 0
@@ -27,96 +30,123 @@ install:
   - export IRIS_SAMPLE_DATA_REF="2f279384eab2dcdef1728331ce1b22c95f775437"
   - export IRIS_SAMPLE_DATA_SUFFIX=$(echo "${IRIS_SAMPLE_DATA_REF}" | sed "s/^v//")
 
-# add repo
-  - ./.travis_no_output sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3E5C1192
-  - yes | ./.travis_no_output sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
-  - ./.travis_no_output sudo apt-get update
+  # Switch off virtualenv so we can use apt-get for Python packages.
+  - which pip
+  - deactivate
+  - which pip
 
-# install deps
-  - ./.travis_no_output sudo apt-get install python-scipy cython python-pip
-  - ./.travis_no_output sudo /usr/bin/pip install --use-mirrors shapely nose
-  - ./.travis_no_output sudo /usr/bin/pip install --use-mirrors pyshp pep8 mock
-  - ./.travis_no_output sudo /usr/bin/pip install --use-mirrors setuptools
-  - ./.travis_no_output sudo /usr/bin/pip install matplotlib==1.2.0
-  - ./.travis_no_output sudo apt-get install libgeos-dev libproj-dev
-  - ./.travis_no_output sudo apt-get install libudunits2-dev libhdf5-serial-dev netcdf-bin libnetcdf-dev
-  - ./.travis_no_output sudo apt-get install make unzip python-sphinx graphviz
-  - ./.travis_no_output sudo /usr/bin/pip install netCDF4==1.0.2
-  - ./.travis_no_output sudo /usr/bin/pip install pyke pandas
-  - ./.travis_no_output sudo apt-get install openjdk-7-jre
-  - ./.travis_no_output sudo apt-get install python-gdal
+  - QUIET=`pwd`/.travis_no_output
+  - OPTIONAL=`pwd`/.travis_optional
+
+# add repo
+  - $QUIET sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3E5C1192
+  - yes | $QUIET sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
+  - $QUIET sudo apt-get update
+
+# Get ready...
+  - sudo apt-get -q install python-pip
+
+# Mandatory dependencies
+  - $QUIET sudo pip install --use-mirrors mock nose pep8
+  - $QUIET sudo apt-get install libudunits2-dev
+  - $QUIET sudo apt-get install python-numpy
+  # Yucky kludge to install netcdftime (as used by iris.unit).
+  - wget http://netcdf4-python.googlecode.com/files/netCDF4-1.0.2.tar.gz
+  - tar xzf netCDF4-1.0.2.tar.gz
+  - mkdir -p /home/travis/.local/lib/python2.7/site-packages
+  - cp netCDF4-1.0.2/netcdftime.py ~/.local/lib/python2.7/site-packages/
+  - rm -r netCDF4-1.0.2
+  - rm netCDF4-1.0.2.tar.gz
+  - ls -l /home/travis/.local/lib/python2.7/site-packages
+
+# Transitional dependencies (i.e. we've not moved them to optional yet!)
+  - $QUIET sudo pip install matplotlib==1.2.0
+  # Cartopy
+  - $QUIET sudo apt-get install cython
+  - $QUIET sudo pip install --use-mirrors shapely
+  - $QUIET sudo pip install --use-mirrors pyshp
+  - $QUIET sudo apt-get install libgeos-dev libproj-dev
+
+# Optional dependencies
+  - $OPTIONAL sudo apt-get install python-scipy
+  - $OPTIONAL sudo apt-get install libhdf5-serial-dev netcdf-bin libnetcdf-dev
+  - $OPTIONAL sudo apt-get install make unzip python-sphinx graphviz
+  - $OPTIONAL sudo pip install netCDF4==1.0.2
+  - $OPTIONAL sudo pip install pyke pandas
+  - $OPTIONAL sudo apt-get install openjdk-7-jre
+  - $OPTIONAL sudo apt-get install python-gdal
   - export LD_LIBRARY_PATH=/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/amd64/server:$LD_LIBRARY_PATH
 
 # cfchecker
-  - ./.travis_no_output sudo /usr/bin/pip install cdat-lite
-  - ./.travis_no_output sudo /usr/bin/pip install cfchecker
+  - $OPTIONAL sudo pip install cdat-lite
+  - $OPTIONAL sudo pip install cfchecker
 # Using table 23 due to a bug present in the current version
-  - ./.travis_no_output wget http://cf-pcmdi.llnl.gov/documents/cf-standard-names/standard-name-table/23/cf-standard-name-table.xml
-#  - ./.travis_no_output wget http://cf-pcmdi.llnl.gov/documents/cf-standard-names/standard-name-table/current/cf-standard-name-table.xml
-  - ./.travis_no_output wget http://cf-pcmdi.llnl.gov/documents/cf-standard-names/area-type-table/current/area-type-table.xml
+  - $OPTIONAL wget http://cf-pcmdi.llnl.gov/documents/cf-standard-names/standard-name-table/23/cf-standard-name-table.xml
+#  - $OPTIONAL wget http://cf-pcmdi.llnl.gov/documents/cf-standard-names/standard-name-table/current/cf-standard-name-table.xml
+  - $OPTIONAL wget http://cf-pcmdi.llnl.gov/documents/cf-standard-names/area-type-table/current/area-type-table.xml
   - echo '#!/usr/bin/env sh' > cfchecker
   - echo "cfchecks -s `pwd`/cf-standard-name-table.xml -a `pwd`/area-type-table.xml -u /usr/share/xml/udunits/udunits2.xml \$1" >> cfchecker
-  - ./.travis_no_output sudo cp cfchecker /usr/local/bin/cfchecker
-  - ./.travis_no_output sudo chmod a+x /usr/local/bin/cfchecker
+  - $OPTIONAL sudo cp cfchecker /usr/local/bin/cfchecker
+  - $OPTIONAL sudo chmod a+x /usr/local/bin/cfchecker
 
 # grib api
-  - ./.travis_no_output sudo apt-get install libjasper-dev
-  - ./.travis_no_output sudo apt-get build-dep libgrib-api-1.9.9 libgrib-api-dev libgrib-api-tools
-  - ./.travis_no_output wget https://software.ecmwf.int/wiki/download/attachments/3473437/grib_api-1.9.16.tar.gz --no-check-certificate
-  - ./.travis_no_output tar -xvf grib_api-1.9.16.tar.gz
-  - cd grib_api-1.9.16/
-  - ../.travis_no_output CFLAGS="-fPIC" ./configure --with-jasper=/usr/local/lib --disable-fortran --enable-python
-  - ../.travis_no_output make
-  - ../.travis_no_output sudo make install
-  - cd python
-  - ../../.travis_no_output sudo /usr/bin/python setup.py install
-  - cd ../..
+  - $OPTIONAL sudo apt-get install libjasper-dev
+  - $OPTIONAL sudo apt-get build-dep libgrib-api-1.9.9 libgrib-api-dev libgrib-api-tools
+  - $OPTIONAL wget https://software.ecmwf.int/wiki/download/attachments/3473437/grib_api-1.9.16.tar.gz --no-check-certificate
+  - $OPTIONAL tar -xvf grib_api-1.9.16.tar.gz
+  - $OPTIONAL cd grib_api-1.9.16/
+  - $OPTIONAL CFLAGS="-fPIC" ./configure --with-jasper=/usr/local/lib --disable-fortran --enable-python
+  - $OPTIONAL make
+  - $OPTIONAL sudo make install
+  - $OPTIONAL cd python
+  - $OPTIONAL sudo python setup.py install
+  - $OPTIONAL cd ../..
 
 # cartopy
-  - ./.travis_no_output wget -O cartopy.zip https://github.com/SciTools/cartopy/archive/${CARTOPY_REF}.zip
-  - ./.travis_no_output unzip -q cartopy.zip
+  - $QUIET wget -O cartopy.zip https://github.com/SciTools/cartopy/archive/${CARTOPY_REF}.zip
+  - $QUIET unzip -q cartopy.zip
   - ln -s $(pwd)/cartopy-${CARTOPY_SUFFIX} cartopy
   - cd cartopy
-  - ../.travis_no_output /usr/bin/python setup.py install --user
+  - $QUIET python setup.py install --user
   - cd ..
 
 # Pre-load Natural Earth data to avoid multiple, overlapping downloads.
 # i.e. There should be no DownloadWarning reports in the log.
-  - /usr/bin/python -c 'import cartopy; cartopy.io.shapereader.natural_earth()'
+  - python -c 'import cartopy; cartopy.io.shapereader.natural_earth()'
 
 # mo_unpack
-  - ./.travis_no_output wget https://puma.nerc.ac.uk/trac/UM_TOOLS/raw-attachment/wiki/unpack/unpack-030712.tgz
-  - ./.travis_no_output tar -xf unpack-030712.tgz
+  - $QUIET wget https://puma.nerc.ac.uk/trac/UM_TOOLS/raw-attachment/wiki/unpack/unpack-030712.tgz
+  - $QUIET tar -xf unpack-030712.tgz
   - cd unpack-030712/libmo_unpack
 #?  - gcc -c -fPIC -O4 -mfpmath=sse -msse -I include -D_LARGEFILE_SOURCE -D_LARGEFILE_SOURCE64 -D_FILE_OFFSET_BITS=64 *.c
-  - ../../.travis_no_output gcc -c -fPIC -O4 -mfpmath=sse -msse -I include -D_LARGEFILE_SOURCE *.c
-  - ../../.travis_no_output gcc -shared -Wl,-soname,libmo_unpack.so -o lib/libmo_unpack.so *.o
-  - ../../.travis_no_output sudo cp lib/* /usr/local/lib
-  - ../../.travis_no_output sudo cp include/* /usr/local/include
+  - $QUIET gcc -c -fPIC -O4 -mfpmath=sse -msse -I include -D_LARGEFILE_SOURCE *.c
+  - $QUIET gcc -shared -Wl,-soname,libmo_unpack.so -o lib/libmo_unpack.so *.o
+  - $QUIET sudo cp lib/* /usr/local/lib
+  - $QUIET sudo cp include/* /usr/local/include
   - cd ../..
 
 # iris test data
-  - ./.travis_no_output wget -O iris-test-data.zip https://github.com/SciTools/iris-test-data/archive/${IRIS_TEST_DATA_REF}.zip
-  - ./.travis_no_output unzip -q iris-test-data.zip
+  - $QUIET wget -O iris-test-data.zip https://github.com/SciTools/iris-test-data/archive/${IRIS_TEST_DATA_REF}.zip
+  - $QUIET unzip -q iris-test-data.zip
   - ln -s $(pwd)/iris-test-data-${IRIS_TEST_DATA_SUFFIX} iris-test-data
 
 # iris sample data
-  - ./.travis_no_output wget -O iris-sample-data.zip https://github.com/SciTools/iris-sample-data/archive/${IRIS_SAMPLE_DATA_REF}.zip
-  - ./.travis_no_output unzip -q iris-sample-data.zip
+  - $QUIET wget -O iris-sample-data.zip https://github.com/SciTools/iris-sample-data/archive/${IRIS_SAMPLE_DATA_REF}.zip
+  - $QUIET unzip -q iris-sample-data.zip
   - ln -s $(pwd)/iris-sample-data-${IRIS_SAMPLE_DATA_SUFFIX} iris-sample-data
   
 # iris
-  - ./.travis_no_output /usr/bin/python setup.py --with-unpack build_ext --inplace -I/usr/local/include -L/usr/local/lib -R/usr/local/lib
-  - ./.travis_no_output /usr/bin/python setup.py std_names
+  - $QUIET python setup.py --with-unpack build_ext --inplace -I/usr/local/include -L/usr/local/lib -R/usr/local/lib
+  - $QUIET python setup.py std_names
   - echo "[Resources]" > lib/iris/etc/site.cfg
   - echo "sample_data_dir = $(pwd)/iris-sample-data/sample_data" >> lib/iris/etc/site.cfg
   - echo "test_data_dir = $(pwd)/iris-test-data/test_data" >> lib/iris/etc/site.cfg
   - ln -s $(pwd)/lib/iris /home/travis/.local/lib/python2.7/site-packages/iris
-  - ./.travis_no_output /usr/bin/python setup.py pyke_rules
+  - $OPTIONAL python setup.py pyke_rules
 
   
 script:
-  - /usr/bin/python setup.py test
+  - python setup.py test
 
 #  - echo --- RUNNING DOCTESTS ---
 #  - cd $(pwd)/docs/iris

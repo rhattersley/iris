@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+if [ "$INSTALL_OPTIONAL_DEPENDENCIES" == "true" ]
+then
+    ./.travis_no_output "$@"
+fi
