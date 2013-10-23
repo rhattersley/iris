@@ -19,17 +19,24 @@
 # import iris tests first so that some things can be initialised before importing anything else
 import iris.tests as tests
 
-import gribapi
+import unittest
+import warnings
+
+try:
+    import gribapi
+except ImportError:
+    gribapi = None
+import mock
 import numpy as np
 import numpy.ma as ma
-import mock
-import warnings
 
 import iris.cube
 import iris.coords
-import iris.fileformats.grib.grib_save_rules as grib_save_rules
+if gribapi is not None:
+    import iris.fileformats.grib.grib_save_rules as grib_save_rules
 
 
+@unittest.skipIf(gribapi is None, 'The "gribapi" module is not available.')
 class Test_non_hybrid_surfaces(tests.IrisTest):
     # Test grib_save_rules.non_hybrid_surfaces()
 
@@ -76,6 +83,7 @@ class Test_non_hybrid_surfaces(tests.IrisTest):
         mock_set_long.assert_any_call(grib, "scaledValueOfSecondFixedSurface", -1)
 
 
+@unittest.skipIf(gribapi is None, 'The "gribapi" module is not available.')
 class Test_data(tests.IrisTest):
     # Test grib_save_rules.data()
 
@@ -116,6 +124,7 @@ class Test_data(tests.IrisTest):
                                     np.array([0.0, 12.5, 50.0]))
 
 
+@unittest.skipIf(gribapi is None, 'The "gribapi" module is not available.')
 class Test_phenomenon(tests.IrisTest):
     @mock.patch.object(gribapi, "grib_set_long")
     def test_phenom_unknown(self, mock_set_long):
@@ -159,6 +168,7 @@ class Test_phenomenon(tests.IrisTest):
         mock_set_long.assert_any_call(grib, "parameterNumber", 22)
 
 
+@unittest.skipIf(gribapi is None, 'The "gribapi" module is not available.')
 class Test_type_of_statistical_processing(tests.IrisTest):
     @mock.patch.object(gribapi, "grib_set_long")
     def test_stats_type_min(self, mock_set_long):

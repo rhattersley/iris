@@ -20,12 +20,20 @@
 import iris.tests as tests
 
 import os
+import unittest
 import warnings
+
+try:
+    import gribapi
+except ImportError:
+    gribapi = None
 
 import iris
 import iris.coords
 import iris.io
 import iris.exceptions
+if gribapi is not None:
+    import iris.fileformats.grib
 
 
 @iris.tests.skip_data
@@ -84,6 +92,7 @@ class TestCallbacks(tests.IrisTest):
             gen_warnings_no_cube = [str(x.message) for x in generated_warnings_no_cube]
             self.assertIn(iris.io.CALLBACK_DEPRECATION_MSG, gen_warnings_no_cube, "Callback deprecation warning message not issued.")
 
+    @unittest.skipIf(gribapi is None, 'The "gribapi" module is not available.')
     def test_grib_callback(self):
         def grib_thing_getter(cube, field, filename):
             cube.add_aux_coord(iris.coords.AuxCoord(field.extra_keys['_periodStartDateTime'], long_name='random element', units='no_unit'))

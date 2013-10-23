@@ -20,15 +20,22 @@
 # importing anything else.
 import iris.tests as tests
 
-import gribapi
+import unittest
+
+try:
+    import gribapi
+except ImportError:
+    gribapi = None
 import numpy as np
 
 import iris
 import iris.cube
 import iris.coords
-import iris.fileformats.grib.grib_save_rules as grib_save_rules
+if gribapi is not None:
+    from iris.fileformats.grib.grib_save_rules import non_hybrid_surfaces
 
 
+@unittest.skipIf(gribapi is None, 'The "gribapi" module is not available.')
 class Test_non_hybrid_surfaces(tests.IrisTest):
     def test_bounded_altitude_feet(self):
         cube = iris.cube.Cube([0])
@@ -36,7 +43,7 @@ class Test_non_hybrid_surfaces(tests.IrisTest):
             1500.0, long_name='altitude', units='ft',
             bounds=np.array([1000.0, 2000.0])))
         grib = gribapi.grib_new_from_samples("GRIB2")
-        grib_save_rules.non_hybrid_surfaces(cube, grib)
+        non_hybrid_surfaces(cube, grib)
         self.assertEqual(
             gribapi.grib_get_double(grib, "scaledValueOfFirstFixedSurface"),
             304.0)

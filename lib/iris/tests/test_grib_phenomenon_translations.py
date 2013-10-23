@@ -23,10 +23,19 @@ Created on Apr 26, 2013
 # importing anything else
 import iris.tests as itests
 
-import iris.fileformats.grib.grib_phenom_translation as gptx
+import unittest
+
+try:
+    import gribapi
+except ImportError:
+    gribapi = None
+
+if gribapi is not None:
+    import iris.fileformats.grib.grib_phenom_translation as gptx
 import iris.unit
 
 
+@unittest.skipIf(gribapi is None, 'The "gribapi" module is not available.')
 class TestGribLookupTableType(itests.IrisTest):
     def test_lookuptable_type(self):
         ll = gptx.LookupTable([('a', 1), ('b', 2)])
@@ -43,6 +52,7 @@ class TestGribLookupTableType(itests.IrisTest):
         assert ll['q'] == 7
 
 
+@unittest.skipIf(gribapi is None, 'The "gribapi" module is not available.')
 class TestGribPhenomenonLookup(itests.IrisTest):
     def test_grib1_lookup(self):
         def check_grib1_cf(param,

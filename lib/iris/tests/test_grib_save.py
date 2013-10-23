@@ -19,19 +19,26 @@
 # import iris tests first so that some things can be initialised before importing anything else
 import iris.tests as tests
 
-import os
-import warnings
 import datetime
+import os
+import unittest
+import warnings
 
-import gribapi
+try:
+    import gribapi
+except ImportError:
+    gribapi = None
 import numpy as np
 
 import iris
 import iris.cube
 import iris.coord_systems
 import iris.coords
+if gribapi is not None:
+    import iris.fileformats.grib
 
 
+@unittest.skipIf(gribapi is None, 'The "gribapi" module is not available.')
 @iris.tests.skip_data
 class TestLoadSave(tests.IrisTest):
     # load and save grib
@@ -103,6 +110,7 @@ class TestLoadSave(tests.IrisTest):
             self.save_and_compare(source_grib, reference_text)
 
 
+@unittest.skipIf(gribapi is None, 'The "gribapi" module is not available.')
 @iris.tests.skip_data
 class TestCubeSave(tests.IrisTest):
     # save fabricated cubes
@@ -190,6 +198,7 @@ class TestCubeSave(tests.IrisTest):
                     1949.0)
 
 
+@unittest.skipIf(gribapi is None, 'The "gribapi" module is not available.')
 class TestHandmade(tests.IrisTest):
 
     def _lat_lon_cube_no_time(self):

@@ -22,7 +22,10 @@ import iris.tests as tests
 import datetime
 import os
 
-import gribapi
+try:
+    import gribapi
+except ImportError:
+    gribapi = None
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 import mock
@@ -30,7 +33,8 @@ import numpy as np
 
 import iris
 import iris.exceptions
-import iris.fileformats.grib
+if gribapi is not None:
+    import iris.fileformats.grib
 import iris.plot as iplt
 import iris.quickplot as qplt
 import iris.tests.stock
@@ -180,6 +184,7 @@ class FakeGribMessage(dict):
             self['unitOfTime'] = timecode
 
 
+@unittest.skipIf(gribapi is None, 'The "gribapi" module is not available.')
 @iris.tests.skip_data
 class TestGribLoad(tests.GraphicsTest):
 
@@ -386,6 +391,7 @@ class TestGribLoad(tests.GraphicsTest):
         self.assertCML(cube, ('grib_load', 'regular_gg_grib2.cml'))
 
 
+@unittest.skipIf(gribapi is None, 'The "gribapi" module is not available.')
 class TestGribTimecodes(tests.GraphicsTest):
     def _run_timetests(self, test_set):
         # Check the unit-handling for given units-codes and editions.
@@ -571,6 +577,7 @@ class TestGribTimecodes(tests.GraphicsTest):
             )
 
 
+@unittest.skipIf(gribapi is None, 'The "gribapi" module is not available.')
 class TestGribSimple(tests.IrisTest):
     # A testing class that does not need the test data.
     def mock_grib(self):
@@ -596,6 +603,7 @@ class TestGribSimple(tests.IrisTest):
         return cube
 
 
+@unittest.skipIf(gribapi is None, 'The "gribapi" module is not available.')
 class TestGrib1LoadPhenomenon(TestGribSimple):
     # Test recognition of grib phenomenon types.
     def mock_grib(self):
@@ -646,6 +654,7 @@ class TestGrib1LoadPhenomenon(TestGribSimple):
         self.known_grib1(34, 'y_wind', 'm s-1')
 
 
+@unittest.skipIf(gribapi is None, 'The "gribapi" module is not available.')
 class TestGrib2LoadPhenomenon(TestGribSimple):
     # Test recognition of grib phenomenon types.
     def mock_grib(self):
