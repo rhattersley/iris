@@ -65,9 +65,9 @@ FORMAT_AGENT.add_spec(
 #
 # GRIB files.
 #
-def _grib(filename):
+def _grib(filename, callback):
     import iris.fileformats.grib
-    iris.fileformats.grib.load_cubes(filename)
+    iris.fileformats.grib.load_cubes(filename, callback)
 
 FORMAT_AGENT.add_spec(FormatSpecification(
     'GRIB', MagicNumber(4), 0x47524942, _grib, priority=5))
@@ -84,9 +84,9 @@ FORMAT_AGENT.add_spec(FormatSpecification(
 #
 # netCDF files.
 #
-def _netcdf(filename):
+def _netcdf(filename, callback):
     import iris.fileformats.netcdf
-    iris.fileformats.netcdf.load_cubes(filename)
+    iris.fileformats.netcdf.load_cubes(filename, callback)
 
 FORMAT_AGENT.add_spec(FormatSpecification(
     'NetCDF', MagicNumber(4), 0x43444601, _netcdf, priority=5))
