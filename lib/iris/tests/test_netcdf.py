@@ -281,6 +281,7 @@ class SaverPermissions(tests.IrisTest):
             os.rmdir(dir_name)
 
 
+@unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
 class TestSave(tests.IrisTest):
     def test_hybrid(self):
         cube = stock.realistic_4d()
@@ -448,6 +449,7 @@ class TestNetCDFSave(tests.IrisTest):
                                       'netcdf_save_multi_%d.cdl' % index))
             os.remove(file_out)
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     @iris.tests.skip_data
     def test_netcdf_save_multi2single(self):
         # Test saving multiple cubes to a single CF-netCDF file.
@@ -465,6 +467,7 @@ class TestNetCDFSave(tests.IrisTest):
         # Check the netCDF file against CDL expected output.
         self.assertCDL(file_out, ('netcdf', 'netcdf_save_multiple.cdl'))
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_netcdf_multi_nocoord(self):
         # Testing the saving of a cublist with no coords.
         cubes = iris.cube.CubeList([self.cube, self.cube2, self.cube3])
@@ -475,6 +478,7 @@ class TestNetCDFSave(tests.IrisTest):
         self.assertCDL(file_out, ('netcdf', 'netcdf_save_nocoord.cdl'))
         os.remove(file_out)
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_netcdf_multi_samevarnme(self):
         # Testing the saving of a cublist with cubes of the same var_name.
         self.cube2.var_name = self.cube.var_name
@@ -486,6 +490,7 @@ class TestNetCDFSave(tests.IrisTest):
         self.assertCDL(file_out, ('netcdf', 'netcdf_save_samevar.cdl'))
         os.remove(file_out)
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_netcdf_multi_with_coords(self):
         # Testing the saving of a cublist with coordinates.
         lat = iris.coords.DimCoord(np.arange(2),
@@ -511,6 +516,7 @@ class TestNetCDFSave(tests.IrisTest):
         self.assertCDL(file_out, ('netcdf', 'netcdf_save_wcoord.cdl'))
         os.remove(file_out)
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_netcdf_multi_wtih_samedimcoord(self):
         time1 = iris.coords.DimCoord(np.arange(10),
                                      standard_name='time',
@@ -531,6 +537,7 @@ class TestNetCDFSave(tests.IrisTest):
         self.assertCDL(file_out, ('netcdf', 'netcdf_save_samedimcoord.cdl'))
         os.remove(file_out)
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_netcdf_multi_conflict_name_dup_coord(self):
         # Duplicate coordinates with modified variable names lookup.
         latitude1 = iris.coords.DimCoord(np.arange(10),
@@ -601,6 +608,7 @@ class TestNetCDFSave(tests.IrisTest):
 
         os.remove(file_out)
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_netcdf_save_conflicting_aux(self):
         # Test saving CF-netCDF with multi-dimensional auxiliary coordinates,
         # with conflicts.
@@ -617,6 +625,7 @@ class TestNetCDFSave(tests.IrisTest):
         self.assertCDL(file_out, ('netcdf', 'netcdf_save_conf_aux.cdl'))
         os.remove(file_out)
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_netcdf_save_gridmapping(self):
         # Test saving CF-netCDF from a cubelist with various grid mappings.
 
@@ -657,6 +666,7 @@ class TestNetCDFSave(tests.IrisTest):
         self.assertCDL(file_out, ('netcdf', 'netcdf_save_gridmapmulti.cdl'))
         os.remove(file_out)
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_netcdf_save_conflicting_names(self):
         # Test saving CF-netCDF with a dimension name corresponding to
         # an existing variable name (conflict).
@@ -707,6 +717,7 @@ class TestNetCDFSave(tests.IrisTest):
             iris.save(self.cube, filename)
             self.assertCDL(filename, ('netcdf', 'netcdf_save_attr.cdl'))
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_conflicting_attributes(self):
         # Should be data variable attributes.
         self.cube.attributes['foo'] = 'bar'
@@ -715,6 +726,7 @@ class TestNetCDFSave(tests.IrisTest):
             iris.save([self.cube, self.cube2], filename)
             self.assertCDL(filename, ('netcdf', 'netcdf_save_confl_attr.cdl'))
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_conflicting_global_attributes(self):
         # Should be data variable attributes, but raise a warning.
         attr_name = 'history'
@@ -730,6 +742,7 @@ class TestNetCDFSave(tests.IrisTest):
                 self.assertCDL(filename,
                                ('netcdf', 'netcdf_save_confl_global_attr.cdl'))
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_no_global_attributes(self):
         # Should all be data variable attributes.
         # Different keys.
