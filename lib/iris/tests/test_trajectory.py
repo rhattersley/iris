@@ -19,7 +19,13 @@
 # import iris tests first so that some things can be initialised before importing anything else
 import iris.tests as tests
 
+import unittest
+
 import matplotlib.pyplot as plt
+try:
+    import netCDF4
+except ImportError:
+    netCDF4 = None
 import numpy as np
 
 import iris.analysis.trajectory
@@ -115,6 +121,7 @@ class TestTrajectory(tests.IrisTest):
         plt.scatter(x, y, c=trajectory_cube[0, 0, :].data)
         self.check_graphic()
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     @iris.tests.skip_data
     def test_tri_polar(self):
         # load data

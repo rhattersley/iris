@@ -27,16 +27,27 @@ import os
 import shutil
 import stat
 import tempfile
+import unittest
 import warnings
 
 import mock
-import netCDF4 as nc
+try:
+    import netCDF4
+except ImportError:
+    netCDF4 = None
 import numpy as np
 import numpy.ma as ma
+try:
+    import pyke
+except ImportError:
+    pyke = None
 
 import iris
-import iris.fileformats._pyke_rules.compiled_krb.fc_rules_cf_fc as pyke_rules
-import iris.fileformats.netcdf
+if pyke is not None:
+    import iris.fileformats._pyke_rules.compiled_krb.fc_rules_cf_fc as \
+        pyke_rules
+if netCDF4 is not None:
+    import iris.fileformats.netcdf
 import iris.std_names
 import iris.util
 import iris.coord_systems as icoord_systems
@@ -45,11 +56,13 @@ import iris.tests.stock as stock
 
 @iris.tests.skip_data
 class TestNetCDFLoad(tests.IrisTest):
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_monotonic(self):
         cubes = iris.load(tests.get_data_path(
             ('NetCDF', 'testing', 'test_monotonic_coordinate.nc')))
         self.assertCML(cubes, ('netcdf', 'netcdf_monotonic.cml'))
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_load_global_xyt_total(self):
         # Test loading single xyt CF-netCDF file.
         cube = iris.load_cube(
@@ -57,12 +70,14 @@ class TestNetCDFLoad(tests.IrisTest):
                                  'SMALL_total_column_co2.nc')))
         self.assertCML(cube, ('netcdf', 'netcdf_global_xyt_total.cml'))
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_load_global_xyt_hires(self):
         # Test loading another single xyt CF-netCDF file.
         cube = iris.load_cube(tests.get_data_path(
             ('NetCDF', 'global', 'xyt', 'SMALL_hires_wind_u_for_ipcc4.nc')))
         self.assertCML(cube, ('netcdf', 'netcdf_global_xyt_hires.cml'))
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_missing_time_bounds(self):
         # Check we can cope with a missing bounds variable.
         with self.temp_filename(suffix='nc') as filename:
@@ -71,11 +86,12 @@ class TestNetCDFLoad(tests.IrisTest):
             src = tests.get_data_path(('NetCDF', 'global', 'xyt',
                                        'SMALL_hires_wind_u_for_ipcc4.nc'))
             shutil.copyfile(src, filename)
-            dataset = nc.Dataset(filename, mode='a')
+            dataset = netCDF4.Dataset(filename, mode='a')
             dataset.renameVariable('time_bnds', 'foo')
             dataset.close()
             cube = iris.load_cube(filename, 'eastward_wind')
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_load_global_xyzt_gems(self):
         # Test loading single xyzt CF-netCDF file (multi-cube).
         cubes = iris.load(tests.get_data_path(('NetCDF', 'global', 'xyz_t',
@@ -88,6 +104,7 @@ class TestNetCDFLoad(tests.IrisTest):
         self.assertTrue(ma.isMaskedArray(lnsp.data))
         self.assertEqual(-32767.0, lnsp.data.fill_value)
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_load_global_xyzt_gems_iter(self):
         # Test loading stepped single xyzt CF-netCDF file (multi-cube).
         for i, cube in enumerate(iris.load(
@@ -106,6 +123,7 @@ class TestNetCDFLoad(tests.IrisTest):
         self.assertIsInstance(cube.coord('latitude')._points,
                               iris.aux_factory.LazyArray)
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_load_rotated_xyt_precipitation(self):
         # Test loading single xyt rotated pole CF-netCDF file.
         cube = iris.load_cube(
@@ -114,6 +132,7 @@ class TestNetCDFLoad(tests.IrisTest):
         self.assertCML(cube, ('netcdf',
                               'netcdf_rotated_xyt_precipitation.cml'))
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_load_tmerc_grid_and_clim_bounds(self):
         # Test loading a single CF-netCDF file with a transverse Mercator
         # grid_mapping and a time variable with climatology.
@@ -122,6 +141,7 @@ class TestNetCDFLoad(tests.IrisTest):
                                  'tmean_1910_1910.nc')))
         self.assertCML(cube, ('netcdf', 'netcdf_tmerc_and_climatology.cml'))
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_load_tmerc_grid_with_projection_origin(self):
         # Test loading a single CF-netCDF file with a transverse Mercator
         # grid_mapping that uses longitude_of_projection_origin and
@@ -144,6 +164,7 @@ class TestNetCDFLoad(tests.IrisTest):
         self.assertEqual(cube.coord('projection_y_coordinate').coord_system,
                          expected)
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_missing_climatology(self):
         # Check we can cope with a missing climatology variable.
         with self.temp_filename(suffix='nc') as filename:
@@ -152,11 +173,12 @@ class TestNetCDFLoad(tests.IrisTest):
             src = tests.get_data_path(('NetCDF', 'transverse_mercator',
                                        'tmean_1910_1910.nc'))
             shutil.copyfile(src, filename)
-            dataset = nc.Dataset(filename, mode='a')
+            dataset = netCDF4.Dataset(filename, mode='a')
             dataset.renameVariable('climatology_bounds', 'foo')
             dataset.close()
             cube = iris.load_cube(filename, 'Mean temperature')
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_cell_methods(self):
         # Test exercising CF-netCDF cell method parsing.
         cubes = iris.load(tests.get_data_path(('NetCDF', 'testing',
@@ -203,6 +225,7 @@ class TestNetCDFLoad(tests.IrisTest):
         self.assertCML(cube[0][(0, 2), (1, 3)],
                        ('netcdf', 'netcdf_deferred_mix_1.cml'))
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_units(self):
         # Test exercising graceful cube and coordinate units loading.
         cube0, cube1 = iris.load(tests.get_data_path(('NetCDF', 'testing',
@@ -340,6 +363,7 @@ class TestNetCDFSave(tests.IrisTest):
                                     var_name='temp3',
                                     units='K')
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     @iris.tests.skip_data
     def test_netcdf_save_format(self):
         # Read netCDF input file.
@@ -351,28 +375,28 @@ class TestNetCDFSave(tests.IrisTest):
 
         # Test default NETCDF4 file format saving.
         iris.save(cube, file_out)
-        ds = nc.Dataset(file_out)
+        ds = netCDF4.Dataset(file_out)
         self.assertEqual(ds.file_format, 'NETCDF4',
                          'Failed to save as NETCDF4 format')
         ds.close()
 
         # Test NETCDF4_CLASSIC file format saving.
         iris.save(cube, file_out, netcdf_format='NETCDF4_CLASSIC')
-        ds = nc.Dataset(file_out)
+        ds = netCDF4.Dataset(file_out)
         self.assertEqual(ds.file_format, 'NETCDF4_CLASSIC',
                          'Failed to save as NETCDF4_CLASSIC format')
         ds.close()
 
         # Test NETCDF3_CLASSIC file format saving.
         iris.save(cube, file_out, netcdf_format='NETCDF3_CLASSIC')
-        ds = nc.Dataset(file_out)
+        ds = netCDF4.Dataset(file_out)
         self.assertEqual(ds.file_format, 'NETCDF3_CLASSIC',
                          'Failed to save as NETCDF3_CLASSIC format')
         ds.close()
 
         # Test NETCDF4_64BIT file format saving.
         iris.save(cube, file_out, netcdf_format='NETCDF3_64BIT')
-        ds = nc.Dataset(file_out)
+        ds = netCDF4.Dataset(file_out)
         self.assertEqual(ds.file_format, 'NETCDF3_64BIT',
                          'Failed to save as NETCDF3_64BIT format')
         ds.close()
@@ -383,6 +407,7 @@ class TestNetCDFSave(tests.IrisTest):
 
         os.remove(file_out)
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     @iris.tests.skip_data
     def test_netcdf_save_single(self):
         # Test saving a single CF-netCDF file.
@@ -402,6 +427,7 @@ class TestNetCDFSave(tests.IrisTest):
 
     # TODO investigate why merge now make time an AuxCoord rather than a
     # DimCoord and why forecast_period is 'preferred'.
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     @iris.tests.skip_data
     def test_netcdf_save_multi2multi(self):
         # Test saving multiple CF-netCDF files.
@@ -551,6 +577,7 @@ class TestNetCDFSave(tests.IrisTest):
 
         os.remove(file_out)
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     @iris.tests.skip_data
     def test_netcdf_save_ndim_auxiliary(self):
         # Test saving CF-netCDF with multi-dimensional auxiliary coordinates.
@@ -662,6 +689,7 @@ class TestNetCDFSave(tests.IrisTest):
             reloaded = iris.load_cube(temp_filename)
             self.assertCML(reloaded, ('netcdf', 'save_load_traj.cml'))
 
+    @unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
     def test_attributes(self):
         # Should be global attributes.
         self.cube.attributes['history'] = 'A long time ago...'
@@ -843,6 +871,7 @@ class TestCFStandardName(tests.IrisTest):
         self.assertFalse('phenomenon_time' in iris.std_names.STD_NAMES)
 
 
+@unittest.skipIf(netCDF4 is None, 'The "netCDF4" module is not available.')
 @iris.tests.skip_data
 class TestNetCDFUKmoProcessFlags(tests.IrisTest):
     def test_process_flags(self):
