@@ -336,7 +336,7 @@ def convert(f):
                                  [{'long_name': 'delta'},
                                   {'long_name': 'reference_pressure'},
                                   {'long_name': 'sigma'},
-                                  Reference('surface_pressure')]))
+                                  Reference('surface_air_pressure')]))
 
     if f.lbvc == 65:
         aux_coords_and_dims.append((DimCoord(f.lblev, standard_name='model_level_number', attributes={'positive': 'up'}), None))
