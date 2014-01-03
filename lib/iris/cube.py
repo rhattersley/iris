@@ -1,4 +1,4 @@
-# (C) British Crown Copyright 2010 - 2013, Met Office
+# (C) British Crown Copyright 2010 - 2014, Met Office
 #
 # This file is part of Iris.
 #
@@ -553,10 +553,7 @@ bound=(1994-12-01 00:00:00, 1998-12-01 00:00:00)
             self._data = data
             self._data_manager = data_manager
         else:
-            if isinstance(data, np.ndarray):
-                self._data = data
-            else:
-                self._data = np.asarray(data)
+            self._data = ma.asarray(data)
             self._data_manager = None
 
         #: The "standard name" for the Cube's phenomenon.
@@ -1267,8 +1264,8 @@ bound=(1994-12-01 00:00:00, 1998-12-01 00:00:00)
     @property
     def data(self):
         """
-        The :class:`numpy.ndarray` representing the multi-dimensional data of
-        the cube.
+        The :class:`numpy.ma.MaskedArray` representing the
+        multi-dimensional data of the cube.
 
         .. note::
 
@@ -1335,7 +1332,7 @@ bound=(1994-12-01 00:00:00, 1998-12-01 00:00:00)
 
     @data.setter
     def data(self, value):
-        data = np.asanyarray(value)
+        data = ma.asarray(value)
 
         if self.shape != data.shape:
             # The _ONLY_ data reshape permitted is converting a 0-dimensional
@@ -1776,11 +1773,6 @@ bound=(1994-12-01 00:00:00, 1998-12-01 00:00:00)
         if not data.flags['OWNDATA']:
             data = data.copy()
 
-        # We can turn a masked array into a normal array if it's full.
-        if isinstance(data, ma.core.MaskedArray):
-            if ma.count_masked(data) == 0:
-                data = data.filled()
-
         # Make the new cube slice
         cube = Cube(data, data_manager=data_manager)
         cube.metadata = copy.deepcopy(self.metadata)
@@ -2108,20 +2100,16 @@ bound=(1994-12-01 00:00:00, 1998-12-01 00:00:00)
                         data.dtype = data.dtype.newbyteorder('<')
                     return data
 
-                if isinstance(data, ma.MaskedArray):
-                    # Fill in masked values to avoid the checksum being
-                    # sensitive to unused numbers. Use a fixed value so
-                    # a change in fill_value doesn't affect the
-                    # checksum.
-                    crc = hex(zlib.crc32(normalise(data.filled(0))))
-                    data_xml_element.setAttribute("checksum", crc)
-                    crc = hex(zlib.crc32(normalise(data.mask)))
-                    data_xml_element.setAttribute("mask_checksum", crc)
-                    data_xml_element.setAttribute('fill_value',
-                                                  str(data.fill_value))
-                else:
-                    crc = hex(zlib.crc32(normalise(data)))
-                    data_xml_element.setAttribute("checksum", crc)
+                # Fill in masked values to avoid the checksum being
+                # sensitive to unused numbers. Use a fixed value so
+                # a change in fill_value doesn't affect the
+                # checksum.
+                crc = hex(zlib.crc32(normalise(data.filled(0))))
+                data_xml_element.setAttribute("checksum", crc)
+                crc = hex(zlib.crc32(normalise(data.mask)))
+                data_xml_element.setAttribute("mask_checksum", crc)
+                data_xml_element.setAttribute('fill_value',
+                                              str(data.fill_value))
             elif self._data_manager is not None:
                 data_xml_element.setAttribute("state", "deferred")
             else:
@@ -2148,10 +2136,7 @@ bound=(1994-12-01 00:00:00, 1998-12-01 00:00:00)
                 byte_order = {'>': 'big', '<': 'little'}.get(dtype.str[0])
                 if byte_order:
                     data_xml_element.setAttribute('byteorder', byte_order)
-
-                if isinstance(data, ma.core.MaskedArray):
-                    data_xml_element.setAttribute('mask_order',
-                                                  _order(data.mask))
+                data_xml_element.setAttribute('mask_order', _order(data.mask))
             else:
                 dtype = self._data_manager.data_type
             data_xml_element.setAttribute('dtype', dtype.name)
@@ -2620,10 +2605,7 @@ bound=(1994-12-01 00:00:00, 1998-12-01 00:00:00)
             # Determine aggregation result data type for the aggregate-by cube
             # data on first pass.
             if i == 0:
-                if isinstance(self.data, ma.MaskedArray):
-                    aggregateby_data = ma.zeros(data_shape, dtype=result.dtype)
-                else:
-                    aggregateby_data = np.zeros(data_shape, dtype=result.dtype)
+                aggregateby_data = ma.zeros(data_shape, dtype=result.dtype)
 
             aggregateby_data[tuple(cube_slice)] = result
 

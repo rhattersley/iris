@@ -1,4 +1,4 @@
-# (C) British Crown Copyright 2013, Met Office
+# (C) British Crown Copyright 2013 - 2014, Met Office
 #
 # This file is part of Iris.
 #
@@ -468,19 +468,16 @@ def regrid_bilinear_rectilinear_src_and_grid(src, grid):
     x_dim = src.coord_dims(src_x_coord)[0]
     y_dim = src.coord_dims(src_y_coord)[0]
     src_data = src.data
-    fill_value = None
-    if np.ma.isMaskedArray(src_data):
-        # Since we're using iris.analysis.interpolate.linear which
-        # doesn't respect the mask, we replace masked values with NaN.
-        fill_value = src_data.fill_value
-        src_data = src_data.filled(np.nan)
+    # Since we're using iris.analysis.interpolate.linear which
+    # doesn't respect the mask, we replace masked values with NaN.
+    fill_value = src_data.fill_value
+    src_data = src_data.filled(np.nan)
     data = _regrid_bilinear_array(src_data, x_dim, y_dim,
                                   src_x_coord, src_y_coord,
                                   sample_grid_x, sample_grid_y)
-    # Convert NaN based results to masked array where appropriate.
+    # Convert NaN based results to masked array.
     mask = np.isnan(data)
-    if np.any(mask):
-        data = np.ma.MaskedArray(data, mask, fill_value=fill_value)
+    data = np.ma.MaskedArray(data, mask, fill_value=fill_value)
 
     # Wrap up the data as a Cube.
     result = _create_cube(data, src, x_dim, y_dim, src_x_coord, src_y_coord,
@@ -707,7 +704,7 @@ def _regrid_area_weighted_array(src_data, x_dim, y_dim,
     Args:
 
     * src_data:
-        An N-dimensional NumPy array.
+        An N-dimensional NumPy MaskedArray.
     * x_dim:
         The X dimension within `src_data`.
     * y_dim:
@@ -748,12 +745,7 @@ def _regrid_area_weighted_array(src_data, x_dim, y_dim,
     if y_dim is not None:
         new_shape[y_dim] = grid_y_bounds.shape[0]
 
-    # Flag to indicate whether the original data was a masked array.
-    src_masked = ma.isMaskedArray(src_data)
-    if src_masked:
-        new_data = ma.zeros(new_shape, fill_value=src_data.fill_value)
-    else:
-        new_data = ma.zeros(new_shape)
+    new_data = ma.zeros(new_shape, fill_value=src_data.fill_value)
     # Assign to mask to explode it, allowing indexed assignment.
     new_data.mask = False
 
@@ -870,12 +862,11 @@ def _regrid_area_weighted_array(src_data, x_dim, y_dim,
 
                 # Determine suitable mask for data associated with cell.
                 # Could use all() here.
-                if src_masked:
-                    # data.mask may be a bool, if not collapse via any().
-                    if data.mask.ndim:
-                        new_data_pt_mask = data.mask.any(axis=axis)
-                    else:
-                        new_data_pt_mask = data.mask
+                # data.mask may be a bool, if not collapse via any().
+                if data.mask.ndim:
+                    new_data_pt_mask = data.mask.any(axis=axis)
+                else:
+                    new_data_pt_mask = data.mask
 
                 # Insert data (and mask) values into new array.
                 if x_dim is not None:
@@ -883,13 +874,7 @@ def _regrid_area_weighted_array(src_data, x_dim, y_dim,
                 if y_dim is not None:
                     indices[y_dim] = j
                 new_data[tuple(indices)] = new_data_pt
-                if src_masked:
-                    new_data.mask[tuple(indices)] = new_data_pt_mask
-
-    # Remove new mask if original data was not masked
-    # and no values in the new array are masked.
-    if not src_masked and not new_data.mask.any():
-        new_data = new_data.data
+                new_data.mask[tuple(indices)] = new_data_pt_mask
 
     return new_data
 
@@ -1222,16 +1207,11 @@ def regrid_weighted_curvilinear_to_rectilinear(src_cube, weights, grid_cube):
     # target cube cell.
 
     # Determine the valid indices and their offsets in M x N space.
-    if ma.isMaskedArray(src_cube.data):
-        # Calculate the valid M offsets, accounting for the source cube mask.
-        mask = ~src_cube.data.mask.flatten()
-        cols = np.where((y_indices >= 0) & (y_indices < ty_depth) &
-                        (x_indices >= 0) & (x_indices < tx_depth) &
-                        mask)[0]
-    else:
-        # Calculate the valid M offsets.
-        cols = np.where((y_indices >= 0) & (y_indices < ty_depth) &
-                        (x_indices >= 0) & (x_indices < tx_depth))[0]
+    # Calculate the valid M offsets, accounting for the source cube mask.
+    mask = ~src_cube.data.mask.flatten()
+    cols = np.where((y_indices >= 0) & (y_indices < ty_depth) &
+                    (x_indices >= 0) & (x_indices < tx_depth) &
+                    mask)[0]
 
     # Reduce the indices to only those that are valid.
     x_indices = x_indices[cols]

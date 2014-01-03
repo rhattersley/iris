@@ -1,4 +1,4 @@
-# (C) British Crown Copyright 2010 - 2013, Met Office
+# (C) British Crown Copyright 2010 - 2014, Met Office
 #
 # This file is part of Iris.
 #
@@ -691,8 +691,7 @@ def linear(cube, sample_points, extrapolation_mode='linear'):
 #                             axis=sample_dim)
             # This is the alternative, temporary workaround.
             # It doesn't use append on an nD mask.
-            if (not isinstance(cube.data, ma.MaskedArray) or
-                not isinstance(cube.data.mask, np.ndarray) or
+            if (not isinstance(cube.data.mask, np.ndarray) or
                 len(cube.data.mask.shape) == 0):
                 data = np.append(cube.data,
                                  cube.data[tuple(coord_slice_in_cube)],

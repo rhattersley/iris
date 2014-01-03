@@ -1,4 +1,4 @@
-# (C) British Crown Copyright 2010 - 2013, Met Office
+# (C) British Crown Copyright 2010 - 2014, Met Office
 #
 # This file is part of Iris.
 #
@@ -588,14 +588,10 @@ def identification(cube, grib):
 
 def data(cube, grib):
     # mdi
-    if isinstance(cube.data, ma.core.MaskedArray):
-        gribapi.grib_set(grib, "bitmapPresent", 1)
-        gribapi.grib_set_double(grib, "missingValue",
-                                float(cube.data.fill_value))
-        data = cube.data.filled()
-    else:
-        gribapi.grib_set_double(grib, "missingValue", float(-1e9))
-        data = cube.data
+    gribapi.grib_set(grib, "bitmapPresent", 1)
+    gribapi.grib_set_double(grib, "missingValue",
+                            float(cube.data.fill_value))
+    data = cube.data.filled()
 
     # units scaling
     grib2_info = gptx.cf_phenom_to_grib2_info(cube.standard_name,

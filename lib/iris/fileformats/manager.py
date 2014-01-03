@@ -1,4 +1,4 @@
-# (C) British Crown Copyright 2010 - 2013, Met Office
+# (C) British Crown Copyright 2010 - 2014, Met Office
 #
 # This file is part of Iris.
 #
@@ -288,10 +288,6 @@ class DataManager(iris.util._OrderedHashable):
                     data.fill_value = payload.fill_value
 
                 data[index] = payload
-
-        # we can turn the masked array into a normal array if it's full.
-        if ma.count_masked(data) == 0:
-            data = data.filled()
 
         # take a copy of the data as it may be discontiguous (i.e. when numpy "fancy" indexing has taken place)
         if not data.flags['C_CONTIGUOUS']:

@@ -1,4 +1,4 @@
-# (C) British Crown Copyright 2010 - 2013, Met Office
+# (C) British Crown Copyright 2010 - 2014, Met Office
 #
 # This file is part of Iris.
 #
@@ -682,14 +682,9 @@ THEN
 
 #MDI
 IF
-    isinstance(cm.data, ma.core.MaskedArray)
+    True
 THEN
     pp.bmdi = cm.data.fill_value
-
-IF
-    not isinstance(cm.data, ma.core.MaskedArray)
-THEN
-    pp.bmdi = -1e30
 
 
 # CFname mega rule

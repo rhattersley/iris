@@ -1,4 +1,4 @@
-# (C) British Crown Copyright 2010 - 2013, Met Office
+# (C) British Crown Copyright 2010 - 2014, Met Office
 #
 # This file is part of Iris.
 #
@@ -337,7 +337,7 @@ class Aggregator(object):
         mdtol = kwargs.pop('mdtol', None)
 
         result = self.call_func(data, axis=axis, **kwargs)
-        if (mdtol is not None and ma.isMaskedArray(data)):
+        if mdtol is not None:
             fraction_not_missing = data.count(axis=axis) / data.shape[axis]
             mask_update = 1 - mdtol > fraction_not_missing
             if ma.isMaskedArray(result):
@@ -458,8 +458,6 @@ def _percentile(data, axis, percent, **kwargs):
     if shape:
         data = data.reshape([data.shape[0], np.prod(shape)])
     result = scipy.stats.mstats.scoreatpercentile(data, percent, **kwargs)
-    if not ma.isMaskedArray(data) and not ma.is_masked(result):
-        result = np.asarray(result)
     if shape:
         result = result.reshape(shape)
     return result
@@ -472,21 +470,15 @@ def _count(array, function, axis, **kwargs):
 
 
 def _proportion(array, function, axis, **kwargs):
-    # if the incoming array is masked use that to count the total number of values
-    if isinstance(array, ma.MaskedArray):
-        # calculate the total number of non-masked values across the given axis
-        total_non_masked = _count(array.mask, lambda v: v == False, axis=axis, **kwargs)
-        total_non_masked = ma.masked_equal(total_non_masked, 0)
-    else:
-        total_non_masked = array.shape[axis]
-
+    # calculate the total number of non-masked values across the given axis
+    total_non_masked = _count(array.mask, lambda v: v == False, axis=axis,
+                              **kwargs)
+    total_non_masked = ma.masked_equal(total_non_masked, 0)
     return _count(array, function, axis=axis, **kwargs) / total_non_masked
 
 
 def _rms(array, axis, **kwargs):
     rval = np.sqrt(ma.average(np.square(array), axis=axis, **kwargs))
-    if not ma.isMaskedArray(array):
-        rval = np.asarray(rval)
     return rval
 
 
@@ -569,17 +561,15 @@ def _peak(array, **kwargs):
                 np.all(np.equal(equal_slice, column_slice)):
             continue
 
-        # Check if the column slice is masked.
-        if ma.isMaskedArray(column_slice):
-            # Check if the column slice contains only nans, without inf
-            # or -inf values, regardless of the mask.
-            if not np.any(np.isfinite(column_slice)) and \
-                    not np.any(np.isinf(column_slice)):
-                data[ndindex[:-1]] = np.nan
-                continue
+        # Check if the column slice contains only nans, without inf
+        # or -inf values, regardless of the mask.
+        if not np.any(np.isfinite(column_slice)) and \
+                not np.any(np.isinf(column_slice)):
+            data[ndindex[:-1]] = np.nan
+            continue
 
-            # Replace masked values with nans.
-            column_slice = column_slice.filled(np.nan)
+        # Replace masked values with nans.
+        column_slice = column_slice.filled(np.nan)
 
         # Determine the column segments that require a fitted spline.
         columns = column_segments(column_slice)

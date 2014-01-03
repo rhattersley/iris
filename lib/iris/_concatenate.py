@@ -1,4 +1,4 @@
-# (C) British Crown Copyright 2013, Met Office
+# (C) British Crown Copyright 2013 - 2014, Met Office
 #
 # This file is part of Iris.
 #
@@ -292,10 +292,7 @@ class _CubeSignature(object):
 
         self.defn = cube.metadata
         self.data_type = cube.data.dtype
-
-        if ma.isMaskedArray(cube.data):
-            # Only set when we're dealing with a masked payload.
-            self.mdi = cube.data.fill_value
+        self.mdi = cube.data.fill_value
 
         #
         # Collate the dimension coordinate metadata.

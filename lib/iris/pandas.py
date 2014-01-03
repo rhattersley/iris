@@ -1,4 +1,4 @@
-# (C) British Crown Copyright 2013, Met Office
+# (C) British Crown Copyright 2013 - 2014, Met Office
 #
 # This file is part of Iris.
 #
@@ -23,6 +23,7 @@ See also: http://pandas.pydata.org/
 from __future__ import absolute_import
 
 import datetime
+import warnings   # temporary for deprecations
 
 import netcdftime
 import numpy as np
@@ -126,7 +127,20 @@ def _assert_shared(np_obj, pandas_obj):
         raise ValueError("Expected a Pandas Series or DataFrame")
 
 
-def as_series(cube, copy=True):
+def _data(cube, kwargs):
+    has_copy = 'copy' in kwargs
+    copy = kwargs.pop('copy', True)
+    if kwargs:
+        msg = 'unexpected keyword argument(s): {}'.format(kwargs.keys())
+        raise TypeError(msg)
+    if has_copy:
+        warnings.warn("The 'copy' argument is deprecated.", stacklevel=3)
+        if not copy:
+            raise ValueError("Masked arrays must always be copied.")
+    data = cube.data.astype('f').filled(np.nan)
+
+
+def as_series(cube, **kwargs):
     """
     Convert a 1D cube to a Pandas Series.
 
@@ -137,22 +151,12 @@ def as_series(cube, copy=True):
     Kwargs:
 
         * copy - Whether to make a copy of the data.
-                 Defaults to True. Must be True for masked data.
+                 Must always be True.
 
-    .. note::
-
-        This function will copy your data by default.
-        If you have a large array that cannot be copied,
-        make sure it is not masked and use copy=False.
+                 .. deprecated:: 1.6
 
     """
-    data = cube.data
-    if isinstance(data, np.ma.MaskedArray):
-        if not copy:
-            raise ValueError("Masked arrays must always be copied.")
-        data = data.astype('f').filled(np.nan)
-    elif copy:
-        data = data.copy()
+    data = _data(cube, kwargs)
 
     index = None
     if cube.dim_coords:
@@ -165,7 +169,7 @@ def as_series(cube, copy=True):
     return series
 
 
-def as_data_frame(cube, copy=True):
+def as_data_frame(cube, **kwargs):
     """
     Convert a 2D cube to a Pandas DataFrame.
 
@@ -176,29 +180,12 @@ def as_data_frame(cube, copy=True):
     Kwargs:
 
         * copy - Whether to make a copy of the data.
-                 Defaults to True. Must be True for masked data
-                 and some data types (see notes below).
+                 Must always be True.
 
-    .. note::
-
-        This function will copy your data by default.
-        If you have a large array that cannot be copied,
-        make sure it is not masked and use copy=False.
-
-    .. note::
-
-        Pandas will sometimes make a copy of the array,
-        for example when creating from an int32 array.
-        Iris will detect this and raise an exception if copy=False.
+                 .. deprecated:: 1.6
 
     """
-    data = cube.data
-    if isinstance(data, np.ma.MaskedArray):
-        if not copy:
-            raise ValueError("Masked arrays must always be copied.")
-        data = data.astype('f').filled(np.nan)
-    elif copy:
-        data = data.copy()
+    data = _data(cube, kwargs)
 
     index = columns = None
     if cube.coords(dimensions=[0]):

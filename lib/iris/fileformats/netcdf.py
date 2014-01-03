@@ -1,4 +1,4 @@
-# (C) British Crown Copyright 2010 - 2013, Met Office
+# (C) British Crown Copyright 2010 - 2014, Met Office
 #
 # This file is part of Iris.
 #
@@ -1326,18 +1326,13 @@ class Saver(object):
         while cf_name in self._dataset.variables:
             cf_name = self._increment_name(cf_name)
 
-        # Determine whether there is a cube MDI value.
-        fill_value = None
-        if isinstance(cube.data, ma.core.MaskedArray):
-            fill_value = cube.data.fill_value
-
         # Get the values in a form which is valid for the file format.
         data = self._ensure_valid_dtype(cube.data, 'cube', cube)
 
         # Create the cube CF-netCDF data variable with data payload.
         cf_var = self._dataset.createVariable(
             cf_name, data.dtype.newbyteorder('='), dimension_names,
-            fill_value=fill_value, **kwargs)
+            fill_value=cube.data.fill_value, **kwargs)
         cf_var[:] = data
 
         if cube.standard_name:

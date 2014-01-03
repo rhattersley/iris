@@ -1,4 +1,4 @@
-# (C) British Crown Copyright 2010 - 2013, Met Office
+# (C) British Crown Copyright 2010 - 2014, Met Office
 #
 # This file is part of Iris.
 #
@@ -1029,11 +1029,6 @@ class ProtoCube(object):
                 else:
                     merged_cube._data = data
 
-            # Unmask the array only if it is filled.
-            if isinstance(merged_cube._data, ma.core.MaskedArray):
-                if ma.count_masked(merged_cube._data) == 0:
-                    merged_cube._data = merged_cube._data.filled()
-
             merged_cubes.append(merged_cube)
 
         return merged_cubes
@@ -1394,8 +1389,7 @@ class ProtoCube(object):
 
         if data_manager is None:
             data_type = cube._data.dtype.name
-            if isinstance(cube.data, ma.core.MaskedArray):
-                mdi = cube.data.fill_value
+            mdi = cube.data.fill_value
         else:
             data_type = data_manager.data_type.name
             mdi = data_manager.mdi
