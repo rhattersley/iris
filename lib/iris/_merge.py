@@ -1,4 +1,4 @@
-# (C) British Crown Copyright 2010 - 2013, Met Office
+# (C) British Crown Copyright 2010 - 2014, Met Office
 #
 # This file is part of Iris.
 #
@@ -1273,8 +1273,7 @@ class ProtoCube(object):
                                   mask=np.ones(self._shape, 'bool'),
                                   fill_value=signature.mdi)
         else:
-            data = ma.MaskedArray(np.zeros(self._shape, 'object'),
-                                  mask=np.ones(self._shape, 'bool'))
+            data = np.zeros(self._shape, 'object')
 
         cube = iris.cube.Cube(data,
                               dim_coords_and_dims=dim_coords_and_dims,
