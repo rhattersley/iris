@@ -51,5 +51,13 @@ def ugrid(location, name):
     cube = iris.load_cube(location, name)
     ug = UGrid.from_ncfile(location)
     cube.mesh = ug
-    cube.mesh_dimension = 1  # {0:time, 1:node}
+    cube.mesh_dimension = 0  # {0:time, 1:node}
     return cube
+
+
+def pcolor(cube):
+    import matplotlib.pyplot as plt
+    mesh = getattr(cube, 'mesh')
+    if mesh is not None:
+        #plt.tripcolor()
+        pass
