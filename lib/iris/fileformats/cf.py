@@ -973,7 +973,9 @@ class CFReader(object):
                               set(self.cf_group.cell_measures)
 
         for name in data_variable_names:
-            self.cf_group[name] = CFDataVariable(name, self._dataset.variables[name])
+            data_var = CFDataVariable(name, self._dataset.variables[name])
+            data_var.nc_dataset = self._dataset
+            self.cf_group[name] = data_var
 
     def _build_cf_groups(self):
         """Build the first order relationships between CF-netCDF variables."""

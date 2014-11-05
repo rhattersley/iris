@@ -54,6 +54,12 @@ import iris.unit
 import iris.util
 
 
+try:
+    import pyugrid
+except ImportError:
+    pyugrid = None
+
+
 # Show Pyke inference engine statistics.
 DEBUG = False
 
@@ -498,6 +504,16 @@ def load_cubes(filenames, callback=None):
             cf.cf_group.promoted.values()
         for cf_var in data_variables:
             cube = _load_cube(engine, cf, cf_var, filename)
+
+            cube.mesh = None
+            cube.mesh_dimension = None
+
+            # Detect ugrid mesh.
+            if pyugrid and 'mesh' in cf_var.ncattrs():
+                mesh = cf_var.mesh
+                dataset = cf_var.nc_dataset
+                cube.mesh = pyugrid.ugrid.UGrid.from_nc_dataset(dataset,
+                                                                mesh_name=mesh)
 
             # Process any associated formula terms and attach
             # the corresponding AuxCoordFactory.
