@@ -514,6 +514,32 @@ def load_cubes(filenames, callback=None):
                 dataset = cf_var.nc_dataset
                 cube.mesh = pyugrid.ugrid.UGrid.from_nc_dataset(dataset,
                                                                 mesh_name=mesh)
+                location = cube.attributes['location']
+                mesh_var = dataset.variables[mesh]
+
+                def common_dimension(attr_name):
+                    var_names = mesh_var.getncattr(attr_name)
+                    var_name = var_names.split()[0]
+                    var = dataset.variables[var_name]
+                    dims = var.dimensions
+                    # Instead of assuming the first dimension of `var`
+                    # should be in common with `cf_var`, we take the
+                    # more robust approach of checking for a single
+                    # common dimension in *any* position.
+                    common = set(dims).intersection(cf_var.dimensions)
+                    assert len(common) == 1
+                    return cf_var.dimensions.index(common.pop())
+
+                location_to_attr = {
+                    'node': 'node_coordinates',
+                    'edge': 'edge_node_connectivity',
+                    'face': 'face_node_connectivity'
+                }
+                if location in location_to_attr:
+                    attr = location_to_attr[location]
+                    cube.mesh_dimension = common_dimension(attr)
+                else:
+                    raise RuntimeError('Unsupported mesh location')
 
             # Process any associated formula terms and attach
             # the corresponding AuxCoordFactory.
