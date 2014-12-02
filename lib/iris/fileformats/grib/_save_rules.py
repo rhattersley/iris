@@ -298,12 +298,30 @@ def grid_definition_template_12(cube, grib):
     gribapi.grib_set(grib, "scaleFactorAtReferencePoint",
                      cs.scale_factor_at_central_meridian)
 
-    # Check that scaleFactorAtReferencePoint is being stored correctly.
+    # Check for a bug in the ECMWF GRIB API (at version 1.12.1) where
+    # the scale factor is erroneously classified as a signed 32-bit
+    # integer.
     scale_at_ref_point = gribapi.grib_get(grib, "scaleFactorAtReferencePoint")
     if cs.scale_factor_at_central_meridian != scale_at_ref_point:
-        msg = "GRIBAPI error prevented correct setting of "\
-              "key 'scaleFactorAtReferencePoint'."
-        raise iris.exceptions.TranslationError(msg)
+        # As a workaround, we can call grib_set with an integer value
+        # whose *on-disk* bit pattern corresponds to the desired bit
+        # pattern of the floating-point value.
+        scale_as_float32 = np.array(cs.scale_factor_at_central_meridian,
+                                    dtype='f4')
+        scale_as_uint32 = scale_as_float32.view(dtype='u4')
+        if scale_as_uint32 >= 0x80000000:
+            # Convert from two's-complement to sign-and-magnitude.
+            # NB. Because of the silly representation of negative
+            # integers in GRIB2, there is no value we can pass to
+            # grib_set that will result in the bit pattern 0x80000000.
+            # But since that bit# pattern corresponds to a floating
+            # point value of negative-zero, we can safely treat it as
+            # positive-zero instead.
+            scale_as_grib_int = 0x80000000 - int(scale_as_uint32)
+        else:
+            scale_as_grib_int = int(scale_as_uint32)
+        gribapi.grib_set(grib, 'scaleFactorAtReferencePoint',
+                         scale_as_grib_int)
 
 
 def grid_definition_section(cube, grib):
