@@ -39,6 +39,27 @@ from iris.fileformats.rules import is_regular, regular_step
 from iris.fileformats.grib import grib_phenom_translation as gptx
 
 
+def fixup_float32_as_int32(value):
+    """
+    Return an int suitable for writing to a GRIB signed 4-byte integer.
+
+    """
+    value_as_float32 = np.array(value, dtype='f4')
+    value_as_uint32 = value_as_float32.view(dtype='u4')
+    if value_as_uint32 >= 0x80000000:
+        # Convert from two's-complement to sign-and-magnitude.
+        # NB. Because of the silly representation of negative
+        # integers in GRIB2, there is no value we can pass to
+        # grib_set that will result in the bit pattern 0x80000000.
+        # But since that bit# pattern corresponds to a floating
+        # point value of negative-zero, we can safely treat it as
+        # positive-zero instead.
+        value_as_grib_int = 0x80000000 - int(value_as_uint32)
+    else:
+        value_as_grib_int = int(value_as_uint32)
+    return value_as_grib_int
+
+
 def gribbability_check(cube):
     "We always need the following things for grib saving."
 
