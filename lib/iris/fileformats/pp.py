@@ -2038,6 +2038,10 @@ def save(cube, target, append=False, field_coords=None, callback=None):
 
     """
     def apply_callback(pairs):
+        if isinstance(target, basestring):
+            filename = target
+        else:
+            filename = getattr(target, 'name', None)
         for cube, field in pairs:
             field = iris.io.run_saver_callback(callback, cube, field, filename)
             if field is not None:

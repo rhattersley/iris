@@ -942,6 +942,10 @@ def save_grib2(cube, target, append=False, callback=None, **kwargs):
 
     """
     def apply_callback(pairs):
+        if isinstance(target, basestring):
+            filename = target
+        else:
+            filename = getattr(target, 'name', None)
         for cube, message in pairs:
             message = iris.io.run_saver_callback(callback, cube, message,
                                                  filename)
