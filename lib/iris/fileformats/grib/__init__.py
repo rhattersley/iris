@@ -941,49 +941,24 @@ def save_grib2(cube, target, append=False, callback=None, **kwargs):
     See also :func:`iris.io.save`.
 
     """
-    # grib file (this bit is common to the pp and grib savers...)
-    if isinstance(target, basestring):
-        grib_file = open(target, "ab" if append else "wb")
-        filename = target
-    elif hasattr(target, "write"):
-        if hasattr(target, "mode") and "b" not in target.mode:
-            raise ValueError("Target not binary")
-        filename = target.name if hasattr(target, 'name') else None
-        grib_file = target
+    def apply_callback(pairs):
+        for cube, message in pairs:
+            message = iris.io.run_saver_callback(callback, cube, message,
+                                                 filename)
+            if message is not None:
+                yield message
+
+    if callback is None:
+        messages = as_messages(cube)
     else:
-        raise ValueError("Can only save grib to filename or writable")
-
-    x_coords = cube.coords(axis='x', dim_coords=True)
-    y_coords = cube.coords(axis='y', dim_coords=True)
-    if len(x_coords) != 1 or len(y_coords) != 1:
-        raise TranslationError("Did not find one (and only one) x or y coord")
-
-    # Save each latlon slice2D in the cube
-    for slice2D in cube.slices([y_coords[0], x_coords[0]]):
-        # Save this slice to the grib file
-        grib_message = gribapi.grib_new_from_samples("GRIB2")
-        _save_rules.run(slice2D, grib_message)
-
-        # Perform any user registered callback function.
-        grib_message = iris.io.run_saver_callback(callback, slice2D,
-                                                  grib_message, filename)
-
-        # Callback mechanism may return None, which must not be saved.
-        if grib_message is None:
-            continue
-
-        # Write to file.
-        gribapi.grib_write(grib_message, grib_file)
-        gribapi.grib_release(grib_message)
-
-    # (this bit is common to the pp and grib savers...)
-    if isinstance(target, basestring):
-        grib_file.close()
+        pairs = as_pairs(cube)
+        messages = apply_callback(pairs)
+    save(messages, target, append=append)
 
 
-def as_messages(cube):
+def as_pairs(cube):
     """
-    Convert one or more cubes to GRIB messages.
+    Convert one or more cubes to (2D cube, GRIB message) pairs.
 
     Args:
         * cube      - A :class:`iris.cube.Cube`, :class:`iris.cube.CubeList` or list of cubes.
@@ -998,7 +973,18 @@ def as_messages(cube):
     for slice2D in cube.slices([y_coords[0], x_coords[0]]):
         grib_message = gribapi.grib_new_from_samples("GRIB2")
         _save_rules.run(slice2D, grib_message)
-        yield grib_message
+        yield (slice2D, grib_message)
+
+
+def as_messages(cube):
+    """
+    Convert one or more cubes to GRIB messages.
+
+    Args:
+        * cube      - A :class:`iris.cube.Cube`, :class:`iris.cube.CubeList` or list of cubes.
+
+    """
+    return (message for cube, message in as_pairs(cube))
 
 
 def save(messages, target, append=False):
