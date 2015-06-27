@@ -6,7 +6,7 @@
         <dimCoord id="1d45e087" points="[36]" shape="(1,)" standard_name="forecast_period" units="Unit('hours')" value_type="int32"/>
       </coord>
       <coord>
-        <auxCoord id="61bde96d" long_name="originating_centre" points="[	US National Weather Service, National Centres for Environmental Prediction]" shape="(1,)" units="Unit('no_unit')" value_type="string"/>
+        <auxCoord id="61bde96d" long_name="originating_centre" points="[	US National Weather Service, National Centres for Environmental Prediction]" shape="(1,)" units="Unit('no_unit')" value_type="unicode"/>
       </coord>
       <coord datadims="[1]">
         <dimCoord id="07a25078" points="[-2396487.0124, -2392487.0124, -2388487.0124,
