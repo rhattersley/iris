@@ -1863,7 +1863,7 @@ bound=(1994-12-01 00:00:00, 1998-12-01 00:00:00)
             if self.attributes:
                 attribute_lines = []
                 for name, value in sorted(six.iteritems(self.attributes)):
-                    value = iris.util.clip_string(unicode(value))
+                    value = iris.util.clip_string(six.text_type(value))
                     line = u'{pad:{width}}{name}: {value}'.format(pad=' ',
                                                                   width=indent,
                                                                   name=name,
@@ -1893,7 +1893,11 @@ bound=(1994-12-01 00:00:00, 1998-12-01 00:00:00)
         warnings.warn('Cube.assert_valid() has been deprecated.')
 
     def __str__(self):
-        return self.summary().encode(errors='replace')
+        # six has a decorator for this bit, but it doesn't do errors='replace'.
+        if six.PY3:
+            return self.summary()
+        else:
+            return self.summary().encode(errors='replace')
 
     def __unicode__(self):
         return self.summary()
@@ -2302,7 +2306,8 @@ bound=(1994-12-01 00:00:00, 1998-12-01 00:00:00)
         Convert a name, coord, or list of names/coords to a list of coords.
         """
         # If not iterable, convert to list of a single item
-        if not hasattr(names_or_coords, '__iter__'):
+        if (not hasattr(names_or_coords, '__iter__') or
+                isinstance(names_or_coords, str)):
             names_or_coords = [names_or_coords]
 
         coords = []
@@ -2348,7 +2353,8 @@ bound=(1994-12-01 00:00:00, 1998-12-01 00:00:00)
 
         """
         # Required to handle a mix between types.
-        if not hasattr(ref_to_slice, '__iter__'):
+        if (not hasattr(ref_to_slice, '__iter__') or
+                isinstance(ref_to_slice, str)):
             ref_to_slice = [ref_to_slice]
 
         slice_dims = set()
@@ -2408,7 +2414,8 @@ bound=(1994-12-01 00:00:00, 1998-12-01 00:00:00)
             raise TypeError("'ordered' argument to slices must be boolean.")
 
         # Required to handle a mix between types
-        if not hasattr(ref_to_slice, '__iter__'):
+        if (not hasattr(ref_to_slice, '__iter__') or
+                isinstance(ref_to_slice, str)):
             ref_to_slice = [ref_to_slice]
 
         dim_to_slice = []
