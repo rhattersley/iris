@@ -135,7 +135,8 @@ class Future(threading.local):
     """Run-time configuration controller."""
 
     def __init__(self, cell_datetime_objects=False, netcdf_promote=False,
-                 strict_grib_load=False, netcdf_no_unlimited=False):
+                 strict_grib_load=False, netcdf_no_unlimited=False,
+                 flexible_cube_ops=False):
         """
         A container for run-time options controls.
 
@@ -178,17 +179,41 @@ class Future(threading.local):
         unlimited.  The current default is that the leading dimension is
         unlimited unless otherwise specified.
 
+        # TODO: CHECK HOW THIS RENDERS
+
+        The option `flexible_cube_ops`, when True, changes the
+        behaviour of various operations that deal with two Cubes.
+            1. The requirements for compatible scalar coordinates in
+               :func:`iris.analysis.maths.add` and
+               :func:`iris.analysis.maths.subtract` are relaxed to
+               match those of :func:`iris.analysis.maths.multipy` and
+               :func:`iris.analysis.maths.divide`.
+            2. Scalar coordinates that differ between the two Cubes
+               are deleted. This change affects:
+                - Cube addition, subtraction, multiplication, and
+                  division.
+                - The :func:`iris.analysis.maths.add`,
+                  :func:`iris.analysis.maths.subtract`,
+                  :func:`iris.analysis.maths.multipy` and
+                  :func:`iris.analysis.maths.divide` functions.
+                - The :func:`iris.analysis.maths.apply_ufunc` function
+                  and the :class:`iris.analysis.maths.IFunc` class when
+                  they wrap a function that takes two arguments.
+
         """
         self.__dict__['cell_datetime_objects'] = cell_datetime_objects
         self.__dict__['netcdf_promote'] = netcdf_promote
         self.__dict__['strict_grib_load'] = strict_grib_load
         self.__dict__['netcdf_no_unlimited'] = netcdf_no_unlimited
+        self.__dict__['flexible_cube_ops'] = flexible_cube_ops
 
     def __repr__(self):
         msg = ('Future(cell_datetime_objects={}, netcdf_promote={}, '
-               'strict_grib_load={}, netcdf_no_unlimited={})')
+               'strict_grib_load={}, netcdf_no_unlimited={}, '
+               'flexible_cube_ops={})')
         return msg.format(self.cell_datetime_objects, self.netcdf_promote,
-                          self.strict_grib_load, self.netcdf_no_unlimited)
+                          self.strict_grib_load, self.netcdf_no_unlimited,
+                          self.flexible_cube_ops)
 
     def __setattr__(self, name, value):
         if name not in self.__dict__:

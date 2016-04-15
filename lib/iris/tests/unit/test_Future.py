@@ -39,11 +39,23 @@ class Test___setattr__(tests.IrisTest):
         future.cell_datetime_objects = new_value
         self.assertEqual(future.cell_datetime_objects, new_value)
 
+    def test_valid_netcdf_promote(self):
+        future = Future()
+        new_value = not future.netcdf_promote
+        future.netcdf_promote = new_value
+        self.assertEqual(future.netcdf_promote, new_value)
+
     def test_valid_strict_grib_load(self):
         future = Future()
         new_value = not future.strict_grib_load
         future.strict_grib_load = new_value
         self.assertEqual(future.strict_grib_load, new_value)
+
+    def test_valid_flexible_cube_ops(self):
+        future = Future()
+        new_value = not future.flexible_cube_ops
+        future.flexible_cube_ops = new_value
+        self.assertEqual(future.flexible_cube_ops, new_value)
 
     def test_invalid_attribute(self):
         future = Future()

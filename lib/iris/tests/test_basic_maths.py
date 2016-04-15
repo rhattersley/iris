@@ -71,6 +71,15 @@ class TestBasicMaths(tests.IrisTest):
         # Check that the subtraction has had no effect on the original
         self.assertCML(e, ('analysis', 'maths_original.cml'))
 
+    def test_minus_with_data_describing_coordinate(self):
+        a = self.cube
+        e = self.cube.copy()
+        lat = e.coord('latitude')
+        lat.points = lat.points+100
+
+        # Cannot ignore a axis describing coordinate
+        self.assertRaises(ValueError, iris.analysis.maths.subtract, a, e)
+
     def test_minus_scalar(self):
         a = self.cube
 
