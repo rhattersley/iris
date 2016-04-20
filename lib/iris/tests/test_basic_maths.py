@@ -71,14 +71,57 @@ class TestBasicMaths(tests.IrisTest):
         # Check that the subtraction has had no effect on the original
         self.assertCML(e, ('analysis', 'maths_original.cml'))
 
-    def test_minus_with_data_describing_coordinate(self):
+    def test_minus_with_data_describing_coordinate_legacy(self):
         a = self.cube
         e = self.cube.copy()
         lat = e.coord('latitude')
         lat.points = lat.points+100
 
         # Cannot ignore a axis describing coordinate
-        self.assertRaises(ValueError, iris.analysis.maths.subtract, a, e)
+        with self.assertRaises(ValueError):
+            iris.analysis.maths.subtract(a, e)
+
+    def test_minus_with_data_describing_coordinate(self):
+        a = self.cube
+        ac = iris.coords.AuxCoord(np.zeros((73, 96)), 'height')
+        a.add_aux_coord(ac, (0, 1))
+
+        e = self.cube.copy()
+
+        #e = e[0]
+        #print(e)
+
+        e.transpose()
+
+        #a.coord('latitude').rename('wibble')
+        e.coord('latitude').var_name = 'foo'
+
+        #e.remove_coord('latitude')
+        #lat = e.coord('latitude')
+        #lat.rename('foo')
+        #lat.points = lat.points+100
+
+        #a.remove_coord('pressure')
+        #e.coord('pressure').rename('foop')
+        #e.remove_coord('pressure')
+        #e.coord('pressure').points = 950
+
+        #h = e.coord('height')
+        #h.var_name = 'wonky'
+        #h.points = h.points + 1
+
+        # Cannot ignore a axis describing coordinate
+        with iris.FUTURE.context(flexible_cube_ops=1):
+            #print(a)
+            #print(`e`)
+            #r = a + e
+            r = iris.analysis.maths.subtract(a, e)
+            #print(a)
+            #print(e)
+            #print(r.coord('latitude').points)
+            #iris.analysis.maths.subtract(a, e)
+            #with self.assertRaises(ValueError):
+            #    iris.analysis.maths.subtract(a, e)
 
     def test_minus_scalar(self):
         a = self.cube
