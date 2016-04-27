@@ -165,10 +165,18 @@ FORMAT_AGENT.add_spec(FormatSpecification('UM Fieldsfile (FF) ancillary '
 #
 # NIMROD files.
 #
+def _nimrod_load(*args, **kwargs):
+    # A simple wrapper for `iris.fileformats.nimrod.load_cubes` which
+    # allows the loader to be registered without triggering the import
+    # of `iris.fileformats.nimrod`.
+    from .nimrod import load_cubes
+    return load_cubes(*args, **kwargs)
+
 FORMAT_AGENT.add_spec(FormatSpecification('NIMROD',
                                           MagicNumber(4),
                                           0x00000200,
-                                          nimrod.load_cubes,
+                                          #nimrod.load_cubes,
+                                          _nimrod_load,
                                           priority=3))
 
 #
