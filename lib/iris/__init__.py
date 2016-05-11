@@ -101,9 +101,10 @@ from six.moves import (filter, input, map, range, zip)  # noqa
 import six
 
 import contextlib
+import glob
 import itertools
 import logging
-import os
+import os.path
 import threading
 
 import iris.config
@@ -427,4 +428,10 @@ save = iris.io.save
 
 def sample_data_path(*path_to_join):
     """Given the sample data resource, returns the full path to the file."""
-    return os.path.join(iris.config.SAMPLE_DATA_DIR, *path_to_join)
+    target = os.path.join(iris.config.SAMPLE_DATA_DIR, *path_to_join)
+    if not glob.glob(target):
+        raise ValueError('Sample data file(s) at {!r} not found.\n'
+                         'NB. This function is only for locating files in the '
+                         'iris sample data collection. It is not needed or '
+                         'appropriate for general file access.'.format(target))
+    return target
